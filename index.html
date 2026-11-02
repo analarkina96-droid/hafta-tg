@@ -99,7 +99,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .cnt.full{color:var(--ok)}.cnt.over{color:var(--bad)}
 #legend{text-align:center;color:var(--muted);font-size:13px;line-height:1.4}
 footer{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-.tool{border:1px solid var(--line);border-radius:14px;padding:14px 4px;background:var(--btn);font-weight:600;font-size:15px;cursor:pointer;position:relative}
+.tool{border:1px solid var(--line);border-radius:14px;padding:14px 2px;background:var(--btn);font-weight:600;font-size:clamp(12px,3.6vw,15px);cursor:pointer;position:relative}
 .tool:disabled{opacity:.4}
 .tool .badge{position:absolute;top:-6px;right:-4px;background:var(--accent);color:#fff;font-size:11px;font-weight:800;border-radius:999px;padding:1px 6px}
 
@@ -231,7 +231,7 @@ body.lives #lives{display:flex}body.tut #lives{display:none!important}
   <footer>
     <button class="tool" id="bUndo" data-t="undo"></button>
     <button class="tool" id="bReset" data-t="reset"></button>
-    <button class="tool" id="bCheck" data-t="check"></button>
+    <button class="tool" id="bCheck"><span data-t="check"></span><span class="badge" id="checkBadge">3</span></button>
     <button class="tool" id="bHint"><span data-t="hint"></span><span class="badge" id="hintBadge">3</span></button>
   </footer>
 </div>
@@ -292,6 +292,14 @@ body.lives #lives{display:flex}body.tut #lives{display:none!important}
   <p data-t="noLivesP"></p>
   <button class="big" id="bAdLife" data-t="adLife"></button>
   <button class="big sec" id="bRestart" data-t="restart"></button>
+</div></div>
+
+<!-- out of checks -->
+<div class="overlay" id="noChecks"><div class="card" style="text-align:center">
+  <h2 data-t="noChecksT"></h2>
+  <p data-t="noChecksP"></p>
+  <button class="big" id="bAdCheck" data-t="watchAd"></button>
+  <button class="big sec" id="bNoCheck" data-t="solveMyself"></button>
 </div></div>
 
 <!-- out of hints -->
@@ -464,7 +472,7 @@ ru:{
   color:'Цвет закрашивания',colorSub:'Выбери, каким цветом закрашиваются клетки',dark:'Тёмная тема',darkSub:'Удобно играть вечером',
   timer:'Таймер',timerSub:'Показывать время решения',livesT:'Жизни',livesSub:'Жизнь снимается, когда цифра или квадрат 2×2 загораются красным',noLivesT:'Жизни закончились',noLivesP:'Посмотри короткую рекламу и получи ещё одну жизнь — или начни задачу заново.',adLife:'+1 жизнь за рекламу',restart:'Начать заново',lifeLost:k=>k?'Ошибка! Осталось '+k+' '+plRu(k,'жизнь','жизни','жизней'):'Ошибка!',lifeBack:'+1 жизнь',language:'Язык',done:'Готово',wipe:'Сбросить весь прогресс',
   wipeQ:'Сбросить прогресс?',wipeText:'Уровни, рекорды и серия дней будут удалены. Настройки сохранятся.',wipeYes:'Сбросить',cancel:'Отмена',wiped:'Прогресс сброшен',
-  noHintsT:'Подсказки закончились',noHintsP:'Посмотри короткую рекламу и получи ещё одну подсказку.',watchAd:'Смотреть рекламу',solveMyself:'Решу сам',
+  noChecksT:'Проверки закончились',noChecksP:'Посмотри короткую рекламу — и я проверю поле ещё раз.',noHintsT:'Подсказки закончились',noHintsP:'Посмотри короткую рекламу и получи ещё одну подсказку.',watchAd:'Смотреть рекламу',solveMyself:'Решу сам',
   colors:['Основной','Синий','Жёлтый','Оранжевый'],tiers:['Лёгкая','Средняя','Сложная','Эксперт'],
   dailyDoneToday:'Задача дня уже решена — приходи завтра!',alreadySolved:'Эта задача уже решена',
   zoomOn:'Приближение: двигай поле пальцем, касание ставит отметку',zoomOff:'Обычный вид',
@@ -533,7 +541,7 @@ en:{
   color:'Fill colour',colorSub:'Choose the colour of filled cells',dark:'Dark theme',darkSub:'Easier on the eyes at night',
   timer:'Timer',timerSub:'Show solving time',livesT:'Lives',livesSub:'You lose a life when a number or a 2×2 block turns red',noLivesT:'Out of lives',noLivesP:'Watch a short ad to get one more life — or start the puzzle over.',adLife:'+1 life for an ad',restart:'Start over',lifeLost:k=>k?'Mistake! '+k+' '+plEn(k,'life','lives')+' left':'Mistake!',lifeBack:'+1 life',language:'Language',done:'Done',wipe:'Reset all progress',
   wipeQ:'Reset progress?',wipeText:'Levels, records and your streak will be deleted. Settings are kept.',wipeYes:'Reset',cancel:'Cancel',wiped:'Progress reset',
-  noHintsT:'Out of hints',noHintsP:'Watch a short ad to get one more hint.',watchAd:'Watch ad',solveMyself:'I’ll solve it myself',
+  noChecksT:'Out of checks',noChecksP:'Watch a short ad and I’ll check the board once more.',noHintsT:'Out of hints',noHintsP:'Watch a short ad to get one more hint.',watchAd:'Watch ad',solveMyself:'I’ll solve it myself',
   colors:['Classic','Blue','Yellow','Orange'],tiers:['Easy','Medium','Hard','Expert'],
   dailyDoneToday:'Today’s puzzle is solved — come back tomorrow!',alreadySolved:'This puzzle is already solved',
   zoomOn:'Zoom: drag to move the board, tap to mark a cell',zoomOff:'Normal view',
@@ -898,7 +906,7 @@ $('bWipeYes').onclick=()=>{
 };
 
 /* ================= game ================= */
-let mode,pid,P,n,st,hist,elapsed=0,tStart=0,tick,solved=false,usedHints=0,hintsLeft=3,livesLeft=3,mistakes=0,NB,CTX,paused=true;
+let mode,pid,P,n,st,hist,elapsed=0,tStart=0,tick,solved=false,usedHints=0,hintsLeft=3,checksLeft=3,livesLeft=3,mistakes=0,NB,CTX,paused=true;
 let zoomed=false,baseCs=40,cross=-1,crossT=null,focusSet=new Set(),targetSet=new Set();
 const board=$('board');
 function pl(k,a,b,c){const m=k%10,h=k%100;if(m===1&&h!==11)return a;if(m>=2&&m<=4&&(h<10||h>=20))return b;return c}
@@ -930,10 +938,10 @@ function openGame(m){
   else{curLevel=S.level;pid='l'+GEN_V+'-'+S.level;P=cachedPuzzle(pid,()=>levelPuzzle(S.level));}
   pruneCache();setPuzzle();setTitle();
   st=Array(n*n).fill(-1);for(const k in P.clues)st[k]=0;
-  elapsed=0;usedHints=0;hintsLeft=3;livesLeft=3;mistakes=0;hist=[];solved=false;clearTimeout(missT);
+  elapsed=0;usedHints=0;hintsLeft=3;checksLeft=3;livesLeft=3;mistakes=0;hist=[];solved=false;clearTimeout(missT);
   if(m==='tutorial'){show('game');build();render();tutStart();return}
   const prog=store.get('balance-prog-'+pid,null);
-  if(prog&&prog.st&&prog.st.length===n*n){st=prog.st;elapsed=prog.t||0;usedHints=prog.u||0;hintsLeft=prog.h??3;livesLeft=prog.lv??3;mistakes=prog.m||0}
+  if(prog&&prog.st&&prog.st.length===n*n){st=prog.st;elapsed=prog.t||0;usedHints=prog.u||0;hintsLeft=prog.h??3;livesLeft=prog.lv??3;checksLeft=prog.ck??3;mistakes=prog.m||0}
   solved=(m==='daily'&&!!S.dailyDone[dKey]);
   if(solved)for(let i=0;i<n*n;i++)if(!(i in P.clues))st[i]=P.sol[i];
   show('game');build();render();renderLives();viol=violations();
@@ -945,7 +953,7 @@ function resume(){if(solved||mode==='tutorial')return;paused=false;tStart=Date.n
 function pause(){if(paused)return;elapsed+=Date.now()-tStart;paused=true;clearInterval(tick);saveProg();Platform.gameplay(false)}
 function curTime(){return elapsed+(paused?0:Date.now()-tStart)}
 function updTimer(){$('timer').textContent=fmt(curTime())}
-function saveProg(){if(!solved&&mode!=='tutorial')store.set('balance-prog-'+pid,{st,t:curTime(),u:usedHints,h:hintsLeft,lv:livesLeft,m:mistakes})}
+function saveProg(){if(!solved&&mode!=='tutorial')store.set('balance-prog-'+pid,{st,t:curTime(),u:usedHints,h:hintsLeft,lv:livesLeft,m:mistakes,ck:checksLeft})}
 $('gBack').onclick=()=>{pause();hideCoach(true);document.body.classList.remove('tut');refreshMenu();if(mode==='daily'){renderCal();show('daily')}else show('menu')};
 document.addEventListener('visibilitychange',()=>{if(document.hidden)pause();else if($('game').classList.contains('show')&&!anyOverlay())resume()});
 function anyOverlay(){return !!document.querySelector('.overlay.show')}
@@ -998,6 +1006,7 @@ function render(){
   for(let c=0;c<n;c++){let s=0;for(let r=0;r<n;r++)s+=st[r*n+c]===1;colC[c].textContent=s+'/'+h;colC[c].className='cnt'+(s===h?' full':s>h?' over':'')}
   $('bUndo').disabled=!hist.length||solved;
   $('hintBadge').textContent=hintsLeft>0?hintsLeft:(S.extraHints>0?S.extraHints:'+');
+  $('checkBadge').textContent=checksLeft>0?checksLeft:'+';
 }
 function isSolved(){for(let i=0;i<n*n;i++){if(!(i in P.clues)&&(st[i]===1)!==(P.sol[i]===1))return false}return true}
 
@@ -1056,7 +1065,7 @@ function checkMiss(){
 }
 function renderLives(){const lv=$('lives');if(!lv)return;let h='';for(let k=0;k<3;k++)h+='<i class="'+(k<livesLeft?'':'lost')+'">♥</i>';if(livesLeft>3)h+='<i>+'+(livesLeft-3)+'</i>';lv.innerHTML=h}
 $('bAdLife').onclick=()=>{$('noLives').classList.remove('show');Platform.rewarded(()=>{livesLeft=1;renderLives();saveProg();toast(T('lifeBack'))});resume()};
-$('bRestart').onclick=()=>{$('noLives').classList.remove('show');for(let i=0;i<n*n;i++)if(!(i in P.clues))st[i]=-1;hist=[];livesLeft=3;mistakes=0;elapsed=0;viol=new Set();hideCoach(true);render();renderLives();saveProg();resume()};
+$('bRestart').onclick=()=>{$('noLives').classList.remove('show');for(let i=0;i<n*n;i++)if(!(i in P.clues))st[i]=-1;hist=[];livesLeft=3;checksLeft=3;mistakes=0;elapsed=0;viol=new Set();hideCoach(true);render();renderLives();saveProg();resume()};
 function endPaint(e){
   if(zoomed&&tapStart){
     const t=tapStart;tapStart=null;releaseCross();
@@ -1126,11 +1135,18 @@ function hintStep(){
 let toastT;function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2200)}
 $('bUndo').onclick=()=>{if(!hist.length||solved)return;st=hist.pop();clearTimeout(missT);viol=violations();hideCoach(true);render();saveProg()};
 $('bReset').onclick=()=>{if(solved)return;hist.push(st.slice());for(let i=0;i<n*n;i++)if(!(i in P.clues))st[i]=-1;viol=new Set();hideCoach(true);render();saveProg()};
-$('bCheck').onclick=()=>{
-  if(solved)return;let wrong=0;
+function doCheck(){
+  let wrong=0;
   for(let i=0;i<n*n;i++){if(i in P.clues||st[i]===-1)continue;if(st[i]!==P.sol[i]){wrong++;cells[i].classList.add('wrong')}}
   if(wrong){sndErr();vib([40,40,40]);toast(T('errors')(wrong))}else toast(T('allGood'));
+}
+$('bCheck').onclick=()=>{
+  if(solved)return;
+  if(checksLeft>0){checksLeft--;render();saveProg();doCheck();return}
+  pause();$('noChecks').classList.add('show');
 };
+$('bAdCheck').onclick=()=>{$('noChecks').classList.remove('show');Platform.rewarded(()=>{render();doCheck()});resume()};
+$('bNoCheck').onclick=()=>{$('noChecks').classList.remove('show');resume()};
 function giveHint(){
   const s=hintStep();if(!s)return;
   hist.push(st.slice());usedHints++;
