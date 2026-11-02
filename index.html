@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>Hafta</title>
 <style>
 :root{--bg:#f3f1ec;--ink:#1d1f23;--muted:#8b8f97;--line:#d6d2c8;--line2:#b9b4a8;--cell:#fbfaf7;--clue:#ebe7de;--fill:#23272e;--dot:#b3ada0;--ok:#2f7d5b;--bad:#c2410c;--accent:#2f5bea;--card:#fbfaf7;--btn:#fff}
@@ -19,6 +19,7 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family
 button{font:inherit;color:inherit}
 .screen{max-width:min(720px,100%);height:100%;margin:0 auto;display:none;flex-direction:column;padding:14px;gap:10px}
 .screen.show{display:flex}
+.screen{padding-top:max(14px,env(safe-area-inset-top));padding-bottom:max(14px,calc(env(safe-area-inset-bottom) + 8px),calc(var(--tg-safe-area-inset-bottom,0px) + var(--tg-content-safe-area-inset-bottom,0px) + 10px))}
 
 /* menu */
 #menu{justify-content:center;gap:14px;position:relative}
@@ -98,11 +99,15 @@ header{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .cnt.full{color:var(--ok)}.cnt.over{color:var(--bad)}
 #legend{text-align:center;color:var(--muted);font-size:13px;line-height:1.4}
 footer{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-.tool{border:1px solid var(--line);border-radius:12px;padding:10px 4px;background:var(--btn);font-weight:600;font-size:13px;cursor:pointer;position:relative}
+.tool{border:1px solid var(--line);border-radius:14px;padding:14px 4px;background:var(--btn);font-weight:600;font-size:15px;cursor:pointer;position:relative}
 .tool:disabled{opacity:.4}
 .tool .badge{position:absolute;top:-6px;right:-4px;background:var(--accent);color:#fff;font-size:11px;font-weight:800;border-radius:999px;padding:1px 6px}
 
 #game{position:relative}
+#game #wrap{flex:0 1 auto;margin-top:auto}
+#game footer{margin-bottom:auto}
+#game #wrap.zoom{flex:1 1 auto;margin-top:0}
+#game footer{width:100%;max-width:520px;align-self:center}
 .cell.cross::before,.cell.focus::before{content:"";position:absolute;inset:0;background:var(--accent);opacity:.08;pointer-events:none}
 .cell.focus::before{opacity:.16}
 .cell.focus.clue{box-shadow:inset 0 0 0 3px var(--accent)}
@@ -952,7 +957,10 @@ let cells=[],rowC=[],colC=[];
 function build(){
   const wrap=$('wrap');
   wrap.classList.remove('zoom');
-  const s=Math.min(wrap.clientWidth,wrap.clientHeight);
+  // свободная высота = экран минус шапка, подпись и кнопки (поле и кнопки держим одной группой)
+  const g=$('game'),cs0=getComputedStyle(g);
+  const availH=g.clientHeight-parseFloat(cs0.paddingTop)-parseFloat(cs0.paddingBottom)-g.querySelector('header').offsetHeight-$('legend').offsetHeight-g.querySelector('footer').offsetHeight-3*10-8;
+  const s=Math.min(wrap.clientWidth,availH);
   baseCs=Math.floor(Math.min(n<=6?84:n<=8?72:62,s/(n+0.7)));
   const cs=zoomed?Math.max(48,baseCs):baseCs;
   wrap.classList.toggle('zoom',zoomed);
