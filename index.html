@@ -123,7 +123,6 @@ body.tut footer,body.tut #timer,body.tut #legend{visibility:hidden}
 #lives.hit{animation:shake .4s}
 @keyframes shake{20%,60%{transform:translateX(-4px)}40%,80%{transform:translateX(4px)}}
 body.lives #lives{display:flex}body.tut #lives{display:none!important}
-body.lives #bCheck{display:none}body.lives footer{grid-template-columns:repeat(3,1fr)}
 .cell.miss{animation:miss .7s}
 @keyframes miss{0%,60%{background:var(--bad)}100%{}}
 #coach{position:absolute;left:14px;right:14px;bottom:14px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px;box-shadow:0 10px 30px rgba(0,0,0,.18);display:none;z-index:3;font-size:15px;line-height:1.45;animation:rise .25s ease-out}
@@ -463,7 +462,7 @@ ru:{
   sounds:'Звуки',soundsSub:'Щелчки при закрашивании, сигнал победы',vibro:'Вибрация',vibroSub:'Лёгкий отклик при закрашивании',
   vibroNo:'Не поддерживается на этом устройстве',vibroIOS:'На iPhone — лёгкий тактильный отклик (iOS 17.4+)',
   color:'Цвет закрашивания',colorSub:'Выбери, каким цветом закрашиваются клетки',dark:'Тёмная тема',darkSub:'Удобно играть вечером',
-  timer:'Таймер',timerSub:'Показывать время решения',livesT:'Жизни',livesSub:'3 ошибки на задачу, ошибки видны сразу',noLivesT:'Жизни закончились',noLivesP:'Посмотри короткую рекламу и получи ещё одну жизнь — или начни задачу заново.',adLife:'+1 жизнь за рекламу',restart:'Начать заново',lifeLost:k=>k?'Ошибка! Осталось '+k+' '+plRu(k,'жизнь','жизни','жизней'):'Ошибка!',lifeBack:'+1 жизнь',language:'Язык',done:'Готово',wipe:'Сбросить весь прогресс',
+  timer:'Таймер',timerSub:'Показывать время решения',livesT:'Жизни',livesSub:'Жизнь снимается, когда цифра или квадрат 2×2 загораются красным',noLivesT:'Жизни закончились',noLivesP:'Посмотри короткую рекламу и получи ещё одну жизнь — или начни задачу заново.',adLife:'+1 жизнь за рекламу',restart:'Начать заново',lifeLost:k=>k?'Ошибка! Осталось '+k+' '+plRu(k,'жизнь','жизни','жизней'):'Ошибка!',lifeBack:'+1 жизнь',language:'Язык',done:'Готово',wipe:'Сбросить весь прогресс',
   wipeQ:'Сбросить прогресс?',wipeText:'Уровни, рекорды и серия дней будут удалены. Настройки сохранятся.',wipeYes:'Сбросить',cancel:'Отмена',wiped:'Прогресс сброшен',
   noHintsT:'Подсказки закончились',noHintsP:'Посмотри короткую рекламу и получи ещё одну подсказку.',watchAd:'Смотреть рекламу',solveMyself:'Решу сам',
   colors:['Основной','Синий','Жёлтый','Оранжевый'],tiers:['Лёгкая','Средняя','Сложная','Эксперт'],
@@ -532,7 +531,7 @@ en:{
   sounds:'Sounds',soundsSub:'Clicks when filling, victory chime',vibro:'Vibration',vibroSub:'Light feedback when filling',
   vibroNo:'Not supported on this device',vibroIOS:'On iPhone — a light haptic tap (iOS 17.4+)',
   color:'Fill colour',colorSub:'Choose the colour of filled cells',dark:'Dark theme',darkSub:'Easier on the eyes at night',
-  timer:'Timer',timerSub:'Show solving time',livesT:'Lives',livesSub:'3 mistakes per puzzle, mistakes shown instantly',noLivesT:'Out of lives',noLivesP:'Watch a short ad to get one more life — or start the puzzle over.',adLife:'+1 life for an ad',restart:'Start over',lifeLost:k=>k?'Mistake! '+k+' '+plEn(k,'life','lives')+' left':'Mistake!',lifeBack:'+1 life',language:'Language',done:'Done',wipe:'Reset all progress',
+  timer:'Timer',timerSub:'Show solving time',livesT:'Lives',livesSub:'You lose a life when a number or a 2×2 block turns red',noLivesT:'Out of lives',noLivesP:'Watch a short ad to get one more life — or start the puzzle over.',adLife:'+1 life for an ad',restart:'Start over',lifeLost:k=>k?'Mistake! '+k+' '+plEn(k,'life','lives')+' left':'Mistake!',lifeBack:'+1 life',language:'Language',done:'Done',wipe:'Reset all progress',
   wipeQ:'Reset progress?',wipeText:'Levels, records and your streak will be deleted. Settings are kept.',wipeYes:'Reset',cancel:'Cancel',wiped:'Progress reset',
   noHintsT:'Out of hints',noHintsP:'Watch a short ad to get one more hint.',watchAd:'Watch ad',solveMyself:'I’ll solve it myself',
   colors:['Classic','Blue','Yellow','Orange'],tiers:['Easy','Medium','Hard','Expert'],
@@ -938,7 +937,7 @@ function openGame(m){
   if(prog&&prog.st&&prog.st.length===n*n){st=prog.st;elapsed=prog.t||0;usedHints=prog.u||0;hintsLeft=prog.h??3;livesLeft=prog.lv??3;mistakes=prog.m||0}
   solved=(m==='daily'&&!!S.dailyDone[dKey]);
   if(solved)for(let i=0;i<n*n;i++)if(!(i in P.clues))st[i]=P.sol[i];
-  show('game');build();render();renderLives();
+  show('game');build();render();renderLives();viol=violations();
   if(solved){toast(dKey===todayKey()?T('dailyDoneToday'):T('alreadySolved'));$('timer').textContent=fmt(S.dailyDone[dKey])}
   else resume();
   if(m==='level'){const nx=S.level+1;setTimeout(()=>cachedPuzzle('l'+GEN_V+'-'+nx,()=>levelPuzzle(nx)),1500)}
@@ -1032,27 +1031,33 @@ board.addEventListener('pointermove',e=>{
   render();
 });
 function afterChange(){saveProg();if(mode==='tutorial'){tutCheck();return}if(isSolved()){clearTimeout(missT);win();return}if(livesOn()&&livesLeft<=0){pause();$('noLives').classList.add('show');return}schedMiss()}
-/* ---------- жизни: ошибка засчитывается, если неверная отметка простояла ~0.7 с
-   (так двойное касание «закрасить → точка» не считается ошибкой) ---------- */
-let missT=null;
+/* ---------- жизни: жизнь снимается, когда появляется НОВОЕ нарушение правил,
+   которое игра подсвечивает красным: цифра стала красной или закрашен квадрат 2×2.
+   Проверка через ~0.7 с после касания, чтобы быстрые переключения не считались. ---------- */
+let missT=null,viol=new Set();
 function livesOn(){return S.lives&&mode!=='tutorial'&&!solved}
-function schedMiss(){clearTimeout(missT);if(livesOn()&&livesLeft>0)missT=setTimeout(checkMiss,700)}
+function violations(){
+  const v=new Set();
+  for(const k in P.clues){const i=+k;let f=0,u=0;for(const j of NB[i]){if(st[j]===1)f++;else if(st[j]===-1)u++}const c=P.clues[i];if(f>c||f+u<c)v.add('c'+i)}
+  for(let r=0;r<n-1;r++)for(let c=0;c<n-1;c++){const i=r*n+c;if(st[i]===1&&st[i+1]===1&&st[i+n]===1&&st[i+n+1]===1)v.add('s'+i)}
+  return v;
+}
+function schedMiss(){clearTimeout(missT);missT=setTimeout(checkMiss,700)}
 function checkMiss(){
-  if(!livesOn()||paint!==null||livesLeft<=0)return;
+  if(paint!==null||solved||mode==='tutorial')return;
   if(anyOverlay()){schedMiss();return}
-  const bad=[];for(let i=0;i<n*n;i++){if(i in P.clues||st[i]===-1)continue;if(st[i]!==P.sol[i])bad.push(i)}
-  if(!bad.length)return;
-  bad.forEach(i=>{st[i]=P.sol[i]===1?1:0;const d=cells[i];d.classList.remove('miss');void d.offsetWidth;d.classList.add('miss')});
-  hist=[];livesLeft--;mistakes++;sndErr();vib([40,40,40]);
+  const now=violations();let fresh=false;now.forEach(k=>{if(!viol.has(k))fresh=true});
+  viol=now;
+  if(!fresh||!livesOn()||livesLeft<=0)return;
+  livesLeft--;mistakes++;sndErr();vib([40,40,40]);
   const lv=$('lives');lv.classList.remove('hit');void lv.offsetWidth;lv.classList.add('hit');
-  render();renderLives();saveProg();
-  if(isSolved()){win();return}
-  if(livesLeft<=0){toast(T('lifeLost')(0));setTimeout(()=>{if(!solved){pause();$('noLives').classList.add('show')}},600)}
+  renderLives();saveProg();
+  if(livesLeft<=0){toast(T('lifeLost')(0));setTimeout(()=>{if(!solved){pause();$('noLives').classList.add('show')}},700)}
   else toast(T('lifeLost')(livesLeft));
 }
 function renderLives(){const lv=$('lives');if(!lv)return;let h='';for(let k=0;k<3;k++)h+='<i class="'+(k<livesLeft?'':'lost')+'">♥</i>';if(livesLeft>3)h+='<i>+'+(livesLeft-3)+'</i>';lv.innerHTML=h}
 $('bAdLife').onclick=()=>{$('noLives').classList.remove('show');Platform.rewarded(()=>{livesLeft=1;renderLives();saveProg();toast(T('lifeBack'))});resume()};
-$('bRestart').onclick=()=>{$('noLives').classList.remove('show');for(let i=0;i<n*n;i++)if(!(i in P.clues))st[i]=-1;hist=[];livesLeft=3;mistakes=0;elapsed=0;hideCoach(true);render();renderLives();saveProg();resume()};
+$('bRestart').onclick=()=>{$('noLives').classList.remove('show');for(let i=0;i<n*n;i++)if(!(i in P.clues))st[i]=-1;hist=[];livesLeft=3;mistakes=0;elapsed=0;viol=new Set();hideCoach(true);render();renderLives();saveProg();resume()};
 function endPaint(e){
   if(zoomed&&tapStart){
     const t=tapStart;tapStart=null;releaseCross();
@@ -1120,8 +1125,8 @@ function hintStep(){
 
 /* ---------- инструменты ---------- */
 let toastT;function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2200)}
-$('bUndo').onclick=()=>{if(!hist.length||solved)return;st=hist.pop();hideCoach(true);render();saveProg()};
-$('bReset').onclick=()=>{if(solved)return;hist.push(st.slice());for(let i=0;i<n*n;i++)if(!(i in P.clues))st[i]=-1;hideCoach(true);render();saveProg()};
+$('bUndo').onclick=()=>{if(!hist.length||solved)return;st=hist.pop();clearTimeout(missT);viol=violations();hideCoach(true);render();saveProg()};
+$('bReset').onclick=()=>{if(solved)return;hist.push(st.slice());for(let i=0;i<n*n;i++)if(!(i in P.clues))st[i]=-1;viol=new Set();hideCoach(true);render();saveProg()};
 $('bCheck').onclick=()=>{
   if(solved)return;let wrong=0;
   for(let i=0;i<n*n;i++){if(i in P.clues||st[i]===-1)continue;if(st[i]!==P.sol[i]){wrong++;cells[i].classList.add('wrong')}}
