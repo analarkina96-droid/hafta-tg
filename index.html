@@ -112,6 +112,15 @@ footer{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 #wrap.zoom #board{touch-action:pan-x pan-y;margin:auto;padding:4px}
 .gear.on{color:var(--accent)}
 body.tut footer,body.tut #timer,body.tut #legend{visibility:hidden}
+#lives{display:none;gap:2px;font-size:17px;line-height:1;color:var(--bad);letter-spacing:1px}
+#lives i{font-style:normal;transition:opacity .3s,transform .3s}
+#lives i.lost{opacity:.22;transform:scale(.8)}
+#lives.hit{animation:shake .4s}
+@keyframes shake{20%,60%{transform:translateX(-4px)}40%,80%{transform:translateX(4px)}}
+body.lives #lives{display:flex}body.tut #lives{display:none!important}
+body.lives #bCheck{display:none}body.lives footer{grid-template-columns:repeat(3,1fr)}
+.cell.miss{animation:miss .7s}
+@keyframes miss{0%,60%{background:var(--bad)}100%{}}
 #coach{position:absolute;left:14px;right:14px;bottom:14px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px;box-shadow:0 10px 30px rgba(0,0,0,.18);display:none;z-index:3;font-size:15px;line-height:1.45;animation:rise .25s ease-out}
 #coach.show{display:block}
 #coach .act{display:block;margin-top:8px;color:var(--accent);font-weight:600;font-size:14px}
@@ -207,6 +216,7 @@ body.tut footer,body.tut #timer,body.tut #legend{visibility:hidden}
   <header>
     <button class="back" id="gBack" data-ta="menu" aria-label="Меню">←</button>
     <div id="gTitle"></div>
+    <div id="lives" aria-label="lives"></div>
     <div id="timer">0:00</div>
     <button class="gear" id="gZoom" data-ta="zoom" aria-label="Приближение" style="display:none"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21M10.5 7.5v6M7.5 10.5h6"/></svg></button>
     <button class="gear" id="gSettings" data-ta="settings" aria-label="Настройки">⚙</button>
@@ -257,6 +267,7 @@ body.tut footer,body.tut #timer,body.tut #legend{visibility:hidden}
   <div class="set"><div><b data-t="vibro"></b><span id="vibroNote"></span></div><button class="sw" id="swVibro" aria-label="Вибрация"></button></div>
   <div class="set"><div style="flex:1"><b data-t="color"></b><span data-t="colorSub"></span><div class="swatches" id="swatches"></div></div></div>
   <div class="set"><div><b data-t="dark"></b><span data-t="darkSub"></span></div><button class="sw" id="swDark" aria-label="Тёмная тема"></button></div>
+  <div class="set"><div><b data-t="livesT"></b><span data-t="livesSub"></span></div><button class="sw" id="swLives" aria-label="Жизни"></button></div>
   <div class="set"><div><b data-t="timer"></b><span data-t="timerSub"></span></div><button class="sw" id="swTimer" aria-label="Таймер"></button></div>
   <div class="set"><div><b data-t="language"></b></div><div class="seg" id="langSeg"><button data-lang="ru">Русский</button><button data-lang="en">English</button></div></div>
   <div class="set" id="shopNoAds"><div><b data-t="noAdsT"></b><span id="noAdsSub"></span></div><button class="buy" id="bBuyNoAds"></button></div>
@@ -270,6 +281,14 @@ body.tut footer,body.tut #timer,body.tut #legend{visibility:hidden}
   <p data-t="wipeText"></p>
   <button class="big" id="bWipeYes" style="background:var(--bad);color:#fff" data-t="wipeYes"></button>
   <button class="big sec" id="bWipeNo" data-t="cancel"></button>
+</div></div>
+
+<!-- out of lives -->
+<div class="overlay" id="noLives"><div class="card" style="text-align:center">
+  <h2 data-t="noLivesT"></h2>
+  <p data-t="noLivesP"></p>
+  <button class="big" id="bAdLife" data-t="adLife"></button>
+  <button class="big sec" id="bRestart" data-t="restart"></button>
 </div></div>
 
 <!-- out of hints -->
@@ -409,7 +428,7 @@ const $=id=>document.getElementById(id);
 const store={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
 const S=store.get('balance-v2',{level:store.get('balance-level',1),solved:0,best:{},streak:0,lastDaily:null,dailyDone:{},sound:true,dark:false});
 
-const DEF={color:'graphite',sound:true,sfxVol:70,music:true,musicVol:50,vibro:true,dark:false,showTimer:true};
+const DEF={color:'graphite',sound:true,sfxVol:70,music:true,musicVol:50,vibro:true,dark:false,showTimer:true,lives:true};
 for(const k in DEF)if(S[k]===undefined)S[k]=DEF[k];
 function saveLocal(){store.set('balance-v2',S)}
 function saveS(){S.ts=Date.now();saveLocal();if(typeof Platform!=='undefined')Platform.cloudSave()}
@@ -439,7 +458,7 @@ ru:{
   sounds:'Звуки',soundsSub:'Щелчки при закрашивании, сигнал победы',vibro:'Вибрация',vibroSub:'Лёгкий отклик при закрашивании',
   vibroNo:'Не поддерживается на этом устройстве',vibroIOS:'На iPhone — лёгкий тактильный отклик (iOS 17.4+)',
   color:'Цвет закрашивания',colorSub:'Выбери, каким цветом закрашиваются клетки',dark:'Тёмная тема',darkSub:'Удобно играть вечером',
-  timer:'Таймер',timerSub:'Показывать время решения',language:'Язык',done:'Готово',wipe:'Сбросить весь прогресс',
+  timer:'Таймер',timerSub:'Показывать время решения',livesT:'Жизни',livesSub:'3 ошибки на задачу, ошибки видны сразу',noLivesT:'Жизни закончились',noLivesP:'Посмотри короткую рекламу и получи ещё одну жизнь — или начни задачу заново.',adLife:'+1 жизнь за рекламу',restart:'Начать заново',lifeLost:k=>k?'Ошибка! Осталось '+k+' '+plRu(k,'жизнь','жизни','жизней'):'Ошибка!',lifeBack:'+1 жизнь',language:'Язык',done:'Готово',wipe:'Сбросить весь прогресс',
   wipeQ:'Сбросить прогресс?',wipeText:'Уровни, рекорды и серия дней будут удалены. Настройки сохранятся.',wipeYes:'Сбросить',cancel:'Отмена',wiped:'Прогресс сброшен',
   noHintsT:'Подсказки закончились',noHintsP:'Посмотри короткую рекламу и получи ещё одну подсказку.',watchAd:'Смотреть рекламу',solveMyself:'Решу сам',
   colors:['Основной','Синий','Жёлтый','Оранжевый'],tiers:['Лёгкая','Средняя','Сложная','Эксперт'],
@@ -508,7 +527,7 @@ en:{
   sounds:'Sounds',soundsSub:'Clicks when filling, victory chime',vibro:'Vibration',vibroSub:'Light feedback when filling',
   vibroNo:'Not supported on this device',vibroIOS:'On iPhone — a light haptic tap (iOS 17.4+)',
   color:'Fill colour',colorSub:'Choose the colour of filled cells',dark:'Dark theme',darkSub:'Easier on the eyes at night',
-  timer:'Timer',timerSub:'Show solving time',language:'Language',done:'Done',wipe:'Reset all progress',
+  timer:'Timer',timerSub:'Show solving time',livesT:'Lives',livesSub:'3 mistakes per puzzle, mistakes shown instantly',noLivesT:'Out of lives',noLivesP:'Watch a short ad to get one more life — or start the puzzle over.',adLife:'+1 life for an ad',restart:'Start over',lifeLost:k=>k?'Mistake! '+k+' '+plEn(k,'life','lives')+' left':'Mistake!',lifeBack:'+1 life',language:'Language',done:'Done',wipe:'Reset all progress',
   wipeQ:'Reset progress?',wipeText:'Levels, records and your streak will be deleted. Settings are kept.',wipeYes:'Reset',cancel:'Cancel',wiped:'Progress reset',
   noHintsT:'Out of hints',noHintsP:'Watch a short ad to get one more hint.',watchAd:'Watch ad',solveMyself:'I’ll solve it myself',
   colors:['Classic','Blue','Yellow','Orange'],tiers:['Easy','Medium','Hard','Expert'],
@@ -825,6 +844,7 @@ function syncSettings(){
   $('swVibro').classList.toggle('on',S.vibro&&canVibrate);$('swVibro').disabled=!canVibrate;
   $('vibroNote').textContent=!canVibrate?T('vibroNo'):(isIOS&&!hasVibrateAPI)?T('vibroIOS'):T('vibroSub');
   $('swDark').classList.toggle('on',S.dark);$('swTimer').classList.toggle('on',S.showTimer);
+  $('swLives').classList.toggle('on',S.lives);document.body.classList.toggle('lives',!!S.lives);if(typeof renderLives==='function')renderLives();
   $('volSfx').value=S.sfxVol;
   $('volSfx').disabled=!S.sound;
   document.body.classList.toggle('dark',S.dark);
@@ -861,6 +881,7 @@ $('swSfx').onclick=()=>{S.sound=!S.sound;saveS();syncSettings();beep(440)};
 $('swVibro').onclick=()=>{S.vibro=!S.vibro;saveS();syncSettings();vib(20)};
 $('swDark').onclick=()=>{S.dark=!S.dark;saveS();syncSettings()};
 $('swTimer').onclick=()=>{S.showTimer=!S.showTimer;saveS();syncSettings()};
+$('swLives').onclick=()=>{S.lives=!S.lives;clearTimeout(missT);saveS();syncSettings()};
 $('volSfx').oninput=e=>{S.sfxVol=+e.target.value;saveS()};
 $('volSfx').onchange=()=>sndFill();
 document.querySelectorAll('#langSeg button').forEach(b=>b.onclick=()=>{S.lang=b.dataset.lang;S.langChosen=true;saveS();applyLang();syncSettings();refreshMenu();if(inGame()&&P)setTitle()});
@@ -874,7 +895,7 @@ $('bWipeYes').onclick=()=>{
 };
 
 /* ================= game ================= */
-let mode,pid,P,n,st,hist,elapsed=0,tStart=0,tick,solved=false,usedHints=0,hintsLeft=3,NB,CTX,paused=true;
+let mode,pid,P,n,st,hist,elapsed=0,tStart=0,tick,solved=false,usedHints=0,hintsLeft=3,livesLeft=3,mistakes=0,NB,CTX,paused=true;
 let zoomed=false,baseCs=40,cross=-1,crossT=null,focusSet=new Set(),targetSet=new Set();
 const board=$('board');
 function pl(k,a,b,c){const m=k%10,h=k%100;if(m===1&&h!==11)return a;if(m>=2&&m<=4&&(h<10||h>=20))return b;return c}
@@ -906,13 +927,13 @@ function openGame(m){
   else{curLevel=S.level;pid='l'+GEN_V+'-'+S.level;P=cachedPuzzle(pid,()=>levelPuzzle(S.level));}
   pruneCache();setPuzzle();setTitle();
   st=Array(n*n).fill(-1);for(const k in P.clues)st[k]=0;
-  elapsed=0;usedHints=0;hintsLeft=3;hist=[];solved=false;
+  elapsed=0;usedHints=0;hintsLeft=3;livesLeft=3;mistakes=0;hist=[];solved=false;clearTimeout(missT);
   if(m==='tutorial'){show('game');build();render();tutStart();return}
   const prog=store.get('balance-prog-'+pid,null);
-  if(prog&&prog.st&&prog.st.length===n*n){st=prog.st;elapsed=prog.t||0;usedHints=prog.u||0;hintsLeft=prog.h??3}
+  if(prog&&prog.st&&prog.st.length===n*n){st=prog.st;elapsed=prog.t||0;usedHints=prog.u||0;hintsLeft=prog.h??3;livesLeft=prog.lv??3;mistakes=prog.m||0}
   solved=(m==='daily'&&!!S.dailyDone[dKey]);
   if(solved)for(let i=0;i<n*n;i++)if(!(i in P.clues))st[i]=P.sol[i];
-  show('game');build();render();
+  show('game');build();render();renderLives();
   if(solved){toast(dKey===todayKey()?T('dailyDoneToday'):T('alreadySolved'));$('timer').textContent=fmt(S.dailyDone[dKey])}
   else resume();
   if(m==='level'){const nx=S.level+1;setTimeout(()=>cachedPuzzle('l'+GEN_V+'-'+nx,()=>levelPuzzle(nx)),1500)}
@@ -921,7 +942,7 @@ function resume(){if(solved||mode==='tutorial')return;paused=false;tStart=Date.n
 function pause(){if(paused)return;elapsed+=Date.now()-tStart;paused=true;clearInterval(tick);saveProg();Platform.gameplay(false)}
 function curTime(){return elapsed+(paused?0:Date.now()-tStart)}
 function updTimer(){$('timer').textContent=fmt(curTime())}
-function saveProg(){if(!solved&&mode!=='tutorial')store.set('balance-prog-'+pid,{st,t:curTime(),u:usedHints,h:hintsLeft})}
+function saveProg(){if(!solved&&mode!=='tutorial')store.set('balance-prog-'+pid,{st,t:curTime(),u:usedHints,h:hintsLeft,lv:livesLeft,m:mistakes})}
 $('gBack').onclick=()=>{pause();hideCoach(true);document.body.classList.remove('tut');refreshMenu();if(mode==='daily'){renderCal();show('daily')}else show('menu')};
 document.addEventListener('visibilitychange',()=>{if(document.hidden)pause();else if($('game').classList.contains('show')&&!anyOverlay())resume()});
 function anyOverlay(){return !!document.querySelector('.overlay.show')}
@@ -988,7 +1009,7 @@ function tapCell(i){
   return next;
 }
 board.addEventListener('pointerdown',e=>{
-  if(solved)return;const i=cellAt(e);
+  if(solved)return;clearTimeout(missT);const i=cellAt(e);
   if(i>=0)setCross(i);
   if(zoomed){tapStart={x:e.clientX,y:e.clientY,i};render();return}   // в приближении: палец двигает поле, касание — ставит отметку
   if(!allowed(i)){render();return}
@@ -1002,7 +1023,28 @@ board.addEventListener('pointermove',e=>{
   if(allowed(i)&&st[i]!==paint){st[i]=paint;sndFor(paint)}
   render();
 });
-function afterChange(){saveProg();if(mode==='tutorial'){tutCheck();return}if(isSolved())win()}
+function afterChange(){saveProg();if(mode==='tutorial'){tutCheck();return}if(isSolved()){clearTimeout(missT);win();return}if(livesOn()&&livesLeft<=0){pause();$('noLives').classList.add('show');return}schedMiss()}
+/* ---------- жизни: ошибка засчитывается, если неверная отметка простояла ~0.7 с
+   (так двойное касание «закрасить → точка» не считается ошибкой) ---------- */
+let missT=null;
+function livesOn(){return S.lives&&mode!=='tutorial'&&!solved}
+function schedMiss(){clearTimeout(missT);if(livesOn()&&livesLeft>0)missT=setTimeout(checkMiss,700)}
+function checkMiss(){
+  if(!livesOn()||paint!==null||livesLeft<=0)return;
+  if(anyOverlay()){schedMiss();return}
+  const bad=[];for(let i=0;i<n*n;i++){if(i in P.clues||st[i]===-1)continue;if(st[i]!==P.sol[i])bad.push(i)}
+  if(!bad.length)return;
+  bad.forEach(i=>{st[i]=P.sol[i]===1?1:0;const d=cells[i];d.classList.remove('miss');void d.offsetWidth;d.classList.add('miss')});
+  hist=[];livesLeft--;mistakes++;sndErr();vib([40,40,40]);
+  const lv=$('lives');lv.classList.remove('hit');void lv.offsetWidth;lv.classList.add('hit');
+  render();renderLives();saveProg();
+  if(isSolved()){win();return}
+  if(livesLeft<=0){toast(T('lifeLost')(0));setTimeout(()=>{if(!solved){pause();$('noLives').classList.add('show')}},600)}
+  else toast(T('lifeLost')(livesLeft));
+}
+function renderLives(){const lv=$('lives');if(!lv)return;let h='';for(let k=0;k<3;k++)h+='<i class="'+(k<livesLeft?'':'lost')+'">♥</i>';if(livesLeft>3)h+='<i>+'+(livesLeft-3)+'</i>';lv.innerHTML=h}
+$('bAdLife').onclick=()=>{$('noLives').classList.remove('show');Platform.rewarded(()=>{livesLeft=1;renderLives();saveProg();toast(T('lifeBack'))});resume()};
+$('bRestart').onclick=()=>{$('noLives').classList.remove('show');for(let i=0;i<n*n;i++)if(!(i in P.clues))st[i]=-1;hist=[];livesLeft=3;mistakes=0;elapsed=0;hideCoach(true);render();renderLives();saveProg();resume()};
 function endPaint(e){
   if(zoomed&&tapStart){
     const t=tapStart;tapStart=null;releaseCross();
