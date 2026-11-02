@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Hafta</title>
+<style>
+:root{--bg:#f3f1ec;--ink:#1d1f23;--muted:#8b8f97;--line:#d6d2c8;--line2:#b9b4a8;--cell:#fbfaf7;--clue:#ebe7de;--fill:#23272e;--dot:#b3ada0;--ok:#2f7d5b;--bad:#c2410c;--accent:#2f5bea;--card:#fbfaf7;--btn:#fff}
+body.dark{--bg:#15171a;--ink:#e9e7e2;--muted:#8a8f98;--line:#2c3036;--line2:#3a3f46;--cell:#1d2024;--clue:#262a30;--fill:#e2ddd2;--dot:#5c6168;--ok:#5fbf8f;--bad:#f0855a;--accent:#7b9bff;--card:#1d2024;--btn:#23272c}
+/* цвета закрашивания: приглушённые, пастельные */
+body[data-color=blue]{--fill:#7f9cc4}
+body[data-color=yellow]{--fill:#d9b65f}
+body[data-color=orange]{--fill:#e0996c}
+body.dark[data-color=blue]{--fill:#8ea8cb}
+body.dark[data-color=yellow]{--fill:#d6bb6c}
+body.dark[data-color=orange]{--fill:#d99a70}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;overflow:hidden;overscroll-behavior:none}
+button{font:inherit;color:inherit}
+.screen{max-width:min(720px,100%);height:100%;margin:0 auto;display:none;flex-direction:column;padding:14px;gap:10px}
+.screen.show{display:flex}
+
+/* menu */
+#menu{justify-content:center;gap:14px;position:relative}
+.ibtn{position:absolute;top:14px;width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--btn);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;transition:transform .1s}
+.ibtn:active{transform:scale(.94)}
+.ibtn.tl{left:14px}.ibtn.tr{right:14px}
+.ibtn svg{width:22px;height:22px;fill:none;stroke:var(--ink);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.ibtn svg .fill{fill:var(--ink);stroke:none}
+.logo{display:grid;grid-template-columns:repeat(4,18px);gap:3px;margin:0 auto 6px}
+.logo i{width:18px;height:18px;background:var(--cell);border:1px solid var(--line)}
+.logo i.f{background:var(--fill);border-color:var(--fill)}
+#menu h1{text-align:center;font-size:40px;margin:0;letter-spacing:.04em}
+#menu .sub{text-align:center;color:var(--muted);margin:-6px 0 10px}
+.mbtn{border:1px solid var(--line);background:var(--btn);border-radius:16px;padding:16px 18px;text-align:left;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.mbtn b{display:block;font-size:18px}
+.mbtn span{color:var(--muted);font-size:14px}
+.mbtn.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.mbtn.primary span{color:inherit;opacity:.7}
+.mbtn .tag{font-size:13px;font-weight:700;padding:4px 9px;border-radius:999px;background:rgba(127,127,127,.18);white-space:nowrap}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:4px}
+.stats div{background:var(--btn);border:1px solid var(--line);border-radius:14px;padding:10px;text-align:center}
+.stats b{display:block;font-size:22px;font-variant-numeric:tabular-nums}
+.stats span{font-size:12px;color:var(--muted)}
+.row{display:flex;gap:8px;justify-content:center}
+.chip{border:1px solid var(--line);background:var(--btn);border-radius:999px;padding:8px 14px;font-size:14px;cursor:pointer}
+
+/* daily calendar */
+#daily{gap:12px}
+.dhead{display:flex;align-items:center;justify-content:space-between}
+.dhead h2{margin:0;font-size:20px}
+.dstats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.dstats div{background:var(--btn);border:1px solid var(--line);border-radius:14px;padding:10px 6px;text-align:center}
+.dstats b{display:block;font-size:22px;font-variant-numeric:tabular-nums}
+.dstats span{font-size:12px;color:var(--muted)}
+.cal{background:var(--btn);border:1px solid var(--line);border-radius:18px;padding:14px 12px}
+.calnav{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.calnav b{font-size:17px}
+.calnav button{border:0;background:none;font-size:22px;width:36px;height:36px;border-radius:50%;cursor:pointer;color:var(--ink)}
+.calnav button:disabled{opacity:.2}
+.cgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.wd{font-size:12px;color:var(--muted);font-weight:600;padding-bottom:2px}
+.wd i{display:block;font-style:normal;font-size:8px;letter-spacing:1px;margin-top:2px;opacity:.8}
+.day{aspect-ratio:1;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;cursor:pointer;position:relative;border:2px solid transparent;font-variant-numeric:tabular-nums}
+.day.future{color:var(--line2);cursor:default}
+.day.solved{background:var(--ink);color:var(--bg)}
+.day.late{border-color:var(--ink)}
+.day.today{box-shadow:0 0 0 2px var(--accent)}
+.day.sel{outline:2px dashed var(--muted);outline-offset:2px}
+.day.prog::after{content:"";position:absolute;bottom:3px;width:5px;height:5px;border-radius:50%;background:var(--accent)}
+.legend{display:flex;gap:14px;justify-content:center;font-size:12px;color:var(--muted);margin-top:10px;flex-wrap:wrap}
+.legend span{display:flex;align-items:center;gap:5px}
+.legend i{width:12px;height:12px;border-radius:50%;display:inline-block}
+.dinfo{background:var(--btn);border:1px solid var(--line);border-radius:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.dinfo b{display:block;font-size:16px}
+.dinfo span{font-size:13px;color:var(--muted)}
+.dinfo button{border:0;border-radius:12px;padding:12px 18px;font-weight:700;font-size:15px;background:var(--ink);color:var(--bg);cursor:pointer;white-space:nowrap}
+
+/* game */
+header{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.back{border:0;background:none;font-size:22px;cursor:pointer;padding:2px 8px 2px 0;color:var(--ink)}
+#gTitle{flex:1;font-weight:800;font-size:18px}
+#gTitle small{display:block;font-weight:500;color:var(--muted);font-size:13px}
+#timer{font-variant-numeric:tabular-nums;color:var(--muted);font-weight:600;font-size:16px}
+#wrap{flex:1;display:flex;align-items:center;justify-content:center;min-height:0}
+#board{display:grid;touch-action:none}
+.cell{width:var(--cs);height:var(--cs);background:var(--cell);border-right:1px solid var(--line);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative}
+.cell.c0{border-left:1px solid var(--line)}.cell.r0{border-top:1px solid var(--line)}
+.cell.on{background:var(--fill)}
+.cell.dot::after{content:"";width:calc(var(--cs)*.14);height:calc(var(--cs)*.14);border-radius:50%;background:var(--dot)}
+.cell.clue{background:var(--clue);cursor:default;font-weight:700;font-size:calc(var(--cs)*.46);font-variant-numeric:tabular-nums}
+.cell.clue.done{color:var(--dot)}
+.cell.clue.bad{color:var(--bad)}
+.cell.sq{box-shadow:inset 0 0 0 3px var(--bad)}
+.cell.wrong{box-shadow:inset 0 0 0 3px var(--bad)}
+.cell.hint{animation:flash 1s 2}
+.cnt{display:flex;align-items:center;justify-content:center;font-size:calc(var(--cs)*.3);font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums}
+.cnt.full{color:var(--ok)}.cnt.over{color:var(--bad)}
+#legend{text-align:center;color:var(--muted);font-size:13px;line-height:1.4}
+footer{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.tool{border:1px solid var(--line);border-radius:12px;padding:10px 4px;background:var(--btn);font-weight:600;font-size:13px;cursor:pointer;position:relative}
+.tool:disabled{opacity:.4}
+.tool .badge{position:absolute;top:-6px;right:-4px;background:var(--accent);color:#fff;font-size:11px;font-weight:800;border-radius:999px;padding:1px 6px}
+
+#game{position:relative}
+.cell.cross::before,.cell.focus::before{content:"";position:absolute;inset:0;background:var(--accent);opacity:.08;pointer-events:none}
+.cell.focus::before{opacity:.16}
+.cell.focus.clue{box-shadow:inset 0 0 0 3px var(--accent)}
+.cell.target{animation:pulse 1.3s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:inset 0 0 0 2px var(--accent)}50%{box-shadow:inset 0 0 0 4px var(--accent)}}
+#wrap.zoom{overflow:auto;align-items:flex-start;justify-content:flex-start;-webkit-overflow-scrolling:touch}
+#wrap.zoom #board{touch-action:pan-x pan-y;margin:auto;padding:4px}
+.gear.on{color:var(--accent)}
+body.tut footer,body.tut #timer,body.tut #legend{visibility:hidden}
+#coach{position:absolute;left:14px;right:14px;bottom:14px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px;box-shadow:0 10px 30px rgba(0,0,0,.18);display:none;z-index:3;font-size:15px;line-height:1.45;animation:rise .25s ease-out}
+#coach.show{display:block}
+#coach .act{display:block;margin-top:8px;color:var(--accent);font-weight:600;font-size:14px}
+#coachBtn{display:block;width:100%;margin-top:12px;border:0;border-radius:12px;padding:12px;font-weight:700;font-size:16px;background:var(--ink);color:var(--bg);cursor:pointer}
+#praise{position:fixed;left:50%;top:16%;transform:translate(-50%,-20px) scale(.9);opacity:0;pointer-events:none;z-index:8;background:var(--ink);color:var(--bg);border-radius:20px;padding:14px 26px;text-align:center;box-shadow:0 14px 40px rgba(0,0,0,.25);transition:opacity .35s,transform .45s cubic-bezier(.2,1.4,.4,1);white-space:nowrap}
+#praise.show{opacity:1;transform:translate(-50%,0) scale(1)}
+#praise b{display:block;font-size:24px;letter-spacing:.01em}
+#praise span{display:block;font-size:13px;opacity:.75;margin-top:3px}
+
+/* overlays */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:18px;z-index:5}
+.overlay.show{display:flex}
+.card{background:var(--card);border-radius:18px;padding:24px 22px;max-width:390px;width:100%;box-shadow:0 20px 50px rgba(0,0,0,.3);max-height:92vh;overflow:auto;animation:rise .25s ease-out}
+.card h2{margin:0 0 12px;font-size:24px}
+.card p{margin:8px 0;line-height:1.45;color:var(--muted);font-size:15px}
+.card ol{padding-left:20px;margin:8px 0;line-height:1.5;font-size:15px}
+.card li{margin:6px 0}
+.big{display:block;width:100%;border:0;border-radius:12px;padding:14px;margin-top:14px;font-size:17px;font-weight:700;color:var(--bg);background:var(--ink);cursor:pointer}
+.big.sec{background:transparent;color:var(--ink);border:1px solid var(--line);margin-top:8px}
+.stat{display:flex;justify-content:space-around;margin:14px 0 4px}
+.stat div{text-align:center}.stat b{display:block;font-size:24px;font-variant-numeric:tabular-nums}.stat span{color:var(--muted);font-size:13px}
+.ex{display:flex;gap:14px;align-items:center;margin:12px 0;background:rgba(127,127,127,.08);border-radius:12px;padding:12px}
+.ex .g{display:grid;grid-template-columns:repeat(4,26px);flex:none}
+.ex .g i{width:26px;height:26px;border:1px solid var(--line);margin:-1px 0 0 -1px;background:var(--cell);display:flex;align-items:center;justify-content:center;font-style:normal;font-weight:700;font-size:14px}
+.ex .g i.f{background:var(--fill)}.ex .g i.n{background:var(--clue)}
+.ex p{margin:0;font-size:13.5px}
+.gear{border:0;background:none;font-size:20px;cursor:pointer;padding:2px 0 2px 10px;color:var(--muted)}
+.set{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.set:last-of-type{border-bottom:0}
+.set b{display:block;font-size:16px}
+.set span{display:block;font-size:13px;color:var(--muted);margin-top:2px}
+.sw{position:relative;width:48px;height:28px;flex:none;border:0;border-radius:999px;background:var(--line2);cursor:pointer;transition:background .2s;padding:0}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.sw.on{background:var(--ok)}
+.sw.on::after{transform:translateX(20px)}
+.sw:disabled{opacity:.4}
+.vol{width:100%;margin:8px 0 0;accent-color:var(--ok)}
+.swatches{display:flex;gap:10px;margin-top:10px}
+.swatch{display:flex;flex-direction:column;align-items:center;gap:5px;border:0;background:none;cursor:pointer;padding:0;font-size:12px;color:var(--muted)}
+.swatch i{width:36px;height:36px;border-radius:10px;display:block;outline:2px solid transparent;outline-offset:3px;margin:3px}
+.swatch.on i{outline-color:var(--ink)}
+.swatch.on{color:var(--ink);font-weight:700}
+.seg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;flex:none}
+.seg button{border:0;background:none;padding:8px 12px;font-size:14px;cursor:pointer;color:var(--muted)}
+.seg button.on{background:var(--ink);color:var(--bg);font-weight:700}
+.legend em{font-style:normal}
+.buy{border:0;border-radius:10px;padding:9px 14px;font-weight:700;font-size:14px;background:var(--ok);color:#fff;cursor:pointer;white-space:nowrap;flex:none}
+.buy:disabled{background:var(--line2);color:var(--muted);cursor:default}
+.danger{border:0;background:none;color:var(--bad);font-size:14px;cursor:pointer;padding:12px 0 0;text-decoration:underline;text-underline-offset:3px}
+#toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:10px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90vw;text-align:center;z-index:9}
+#toast.show{opacity:1}
+@keyframes flash{50%{box-shadow:inset 0 0 0 3px var(--accent)}}
+@keyframes rise{from{transform:translateY(16px);opacity:0}to{transform:none;opacity:1}}
+</style>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+
+<!-- ============ MENU ============ -->
+<div class="screen show" id="menu">
+  <button class="ibtn tl" id="mRules" data-ta="rules" aria-label="Правила"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="M9.6 9.3a2.5 2.5 0 1 1 3.4 2.3c-.6.3-1 .8-1 1.5v.6"/><circle cx="12" cy="16.9" r=".6" class="fill"/></svg></button>
+  <button class="ibtn tr" id="mSettings" data-ta="settings" aria-label="Настройки"><svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2.2"/><circle cx="10" cy="17" r="2.2"/></svg></button>
+  <div class="logo"><i class="f"></i><i></i><i></i><i class="f"></i><i></i><i class="f"></i><i class="f"></i><i></i><i class="f"></i><i></i><i class="f"></i><i></i><i></i><i class="f"></i><i></i><i class="f"></i></div>
+  <h1 data-t="logo">HAFTA</h1>
+  <div class="sub" data-t="sub"></div>
+  <button class="mbtn primary" id="mDaily"><div><b data-t="daily"></b><span id="mDailyDate"></span></div><div class="tag" id="mDailyTag"></div></button>
+  <button class="mbtn" id="mLevels"><div><b data-t="levels"></b><span id="mLevelSub"></span></div><div class="tag" id="mLevelTag"></div></button>
+  <div class="stats">
+    <div><b id="sStreak">0</b><span data-t="streakDays"></span></div>
+    <div><b id="sSolved">0</b><span data-t="solvedLbl"></span></div>
+    <div id="bestTile" style="cursor:pointer"><b id="sBest">—</b><span id="sBestLbl"></span></div>
+  </div>
+</div>
+
+<!-- ============ DAILY ============ -->
+<div class="screen" id="daily">
+  <div class="dhead"><button class="back" id="dBack" data-ta="menu" aria-label="Меню">←</button><h2 data-t="daily"></h2><div style="width:30px"></div></div>
+  <div class="dstats">
+    <div><b id="dStreak">0</b><span data-t="dStreak"></span></div>
+    <div><b id="dBestStreak">0</b><span data-t="dBestStreak"></span></div>
+    <div><b id="dMonth">0</b><span data-t="dMonth"></span></div>
+  </div>
+  <div class="cal">
+    <div class="calnav"><button id="cPrev" aria-label="Предыдущий месяц">‹</button><b id="cTitle"></b><button id="cNext" aria-label="Следующий месяц">›</button></div>
+    <div class="cgrid" id="cGrid"></div>
+    <div class="legend"><span><i style="background:var(--ink)"></i><em data-t="legOn"></em></span><span><i style="border:2px solid var(--ink)"></i><em data-t="legLate"></em></span><span><i style="box-shadow:0 0 0 2px var(--accent)"></i><em data-t="legToday"></em></span></div>
+  </div>
+  <div class="dinfo"><div><b id="iTitle"></b><span id="iSub"></span></div><button id="iPlay"></button></div>
+</div>
+
+<!-- ============ GAME ============ -->
+<div class="screen" id="game">
+  <header>
+    <button class="back" id="gBack" data-ta="menu" aria-label="Меню">←</button>
+    <div id="gTitle"></div>
+    <div id="timer">0:00</div>
+    <button class="gear" id="gZoom" data-ta="zoom" aria-label="Приближение" style="display:none"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21M10.5 7.5v6M7.5 10.5h6"/></svg></button>
+    <button class="gear" id="gSettings" data-ta="settings" aria-label="Настройки">⚙</button>
+  </header>
+  <div id="wrap"><div id="board"></div></div>
+  <div id="legend" data-t="legend"></div>
+  <div id="coach"><div id="coachText"></div><button id="coachBtn"></button></div>
+  <footer>
+    <button class="tool" id="bUndo" data-t="undo"></button>
+    <button class="tool" id="bReset" data-t="reset"></button>
+    <button class="tool" id="bCheck" data-t="check"></button>
+    <button class="tool" id="bHint"><span data-t="hint"></span><span class="badge" id="hintBadge">3</span></button>
+  </footer>
+</div>
+
+<div id="toast"></div>
+<div id="praise"></div>
+
+<!-- rules -->
+<div class="overlay" id="rules"><div class="card">
+  <h2 data-t="howTo"></h2>
+  <ol><li data-t="r1"></li><li data-t="r2"></li><li data-t="r3"></li></ol>
+  <div class="ex">
+    <div class="g"><i class="f"></i><i></i><i></i><i class="f"></i><i class="n">3</i><i class="f"></i><i class="f"></i><i></i><i class="f"></i><i></i><i class="f"></i><i></i><i></i><i class="f"></i><i></i><i class="f"></i></div>
+    <p data-t="rEx"></p>
+  </div>
+  <p data-t="rNote"></p>
+  <button class="big" id="bRulesOk" data-t="ok"></button>
+  <button class="big sec" id="bTutorial" data-t="tutBtn"></button>
+</div></div>
+
+<!-- win -->
+<div class="overlay" id="win"><div class="card" style="text-align:center">
+  <h2 id="wTitle">Решено</h2>
+  <div class="stat"><div><b id="wTime">0:00</b><span data-t="time"></span></div><div><b id="wBest">—</b><span id="wBestLbl">лучшее</span></div></div>
+  <p id="wNote"></p>
+  <button class="big" id="bNext">Следующая задача</button>
+  <button class="big sec" id="bShare" data-t="share"></button>
+  <button class="big sec" id="bMenu" data-t="back"></button>
+</div></div>
+
+<div class="overlay" id="loading" style="background:rgba(0,0,0,.25)"><div class="card" style="text-align:center;max-width:220px;padding:18px" data-t="loading"></div></div>
+
+<!-- settings -->
+<div class="overlay" id="settings"><div class="card">
+  <h2 data-t="settings"></h2>
+  <div class="set"><div style="flex:1"><b data-t="sounds"></b><span data-t="soundsSub"></span><input type="range" class="vol" id="volSfx" min="0" max="100"></div><button class="sw" id="swSfx" aria-label="Звуки"></button></div>
+  <div class="set"><div><b data-t="vibro"></b><span id="vibroNote"></span></div><button class="sw" id="swVibro" aria-label="Вибрация"></button></div>
+  <div class="set"><div style="flex:1"><b data-t="color"></b><span data-t="colorSub"></span><div class="swatches" id="swatches"></div></div></div>
+  <div class="set"><div><b data-t="dark"></b><span data-t="darkSub"></span></div><button class="sw" id="swDark" aria-label="Тёмная тема"></button></div>
+  <div class="set"><div><b data-t="timer"></b><span data-t="timerSub"></span></div><button class="sw" id="swTimer" aria-label="Таймер"></button></div>
+  <div class="set"><div><b data-t="language"></b></div><div class="seg" id="langSeg"><button data-lang="ru">Русский</button><button data-lang="en">English</button></div></div>
+  <div class="set" id="shopNoAds"><div><b data-t="noAdsT"></b><span id="noAdsSub"></span></div><button class="buy" id="bBuyNoAds"></button></div>
+  <div class="set" id="shopHints"><div><b data-t="hintsT"></b><span id="hintsSub"></span></div><button class="buy" id="bBuyHints"></button></div>
+  <button class="big" id="bSetOk" data-t="done"></button>
+  <div style="text-align:center"><button class="danger" id="bWipe" data-t="wipe"></button></div>
+</div></div>
+
+<div class="overlay" id="wipe"><div class="card" style="text-align:center">
+  <h2 data-t="wipeQ"></h2>
+  <p data-t="wipeText"></p>
+  <button class="big" id="bWipeYes" style="background:var(--bad);color:#fff" data-t="wipeYes"></button>
+  <button class="big sec" id="bWipeNo" data-t="cancel"></button>
+</div></div>
+
+<!-- out of hints -->
+<div class="overlay" id="noHints"><div class="card" style="text-align:center">
+  <h2 data-t="noHintsT"></h2>
+  <p data-t="noHintsP"></p>
+  <button class="big" id="bAdHint" data-t="watchAd"></button>
+  <button class="big sec" id="bBuyHints2"></button>
+  <button class="big sec" id="bNoHint" data-t="solveMyself"></button>
+</div></div>
+
+<script>
+/* ================= platform: Telegram ================= */
+/* ======================= НАСТРОЙКИ TELEGRAM =======================
+   Заполни после того, как создашь бота и подключишь рекламу/оплату.
+   Пустые значения — функция просто выключена, игра работает и без неё. */
+const TG_CONFIG = {
+  appLink: 'https://t.me/YOUR_BOT/play',   // ссылка на мини-приложение из @BotFather
+  shopUrl: '',                              // адрес мини-сервера оплаты (Cloudflare Worker), напр. 'https://hafta-pay.имя.workers.dev'
+  adsRewardBlock: '',                       // blockId рекламы за вознаграждение (Adsgram)
+  adsInterBlock: '',                        // blockId межуровневой рекламы (Adsgram)
+  stars: { remove_ads: 100, hints10: 30 }   // цены в звёздах — должны совпадать с ценами в мини-сервере
+};
+/* ================================================================== */
+const PRODUCTS={noAds:'remove_ads',hints:'hints10'};
+let adPlaying=false;
+const TGA=window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.initData?window.Telegram.WebApp:null;
+const Platform={tg:TGA,lastAd:0,payments:null,catalog:{},ads:{},
+  init(){
+    const tg=this.tg;
+    if(TG_CONFIG.shopUrl)this.payments={};               // магазин виден, только если настроен сервер оплаты
+    if(!tg)return;
+    tg.ready();try{tg.expand()}catch(e){}
+    try{tg.disableVerticalSwipes()}catch(e){}             // чтобы закрашивание пальцем не сворачивало игру
+    this.paint();
+    try{if(!S.langChosen){const l=(tg.initDataUnsafe.user||{}).language_code||'';S.lang=/^(ru|uk|be|kk)/.test(l)?'ru':'en';saveLocal();applyLang();refreshMenu()}}catch(e){}
+    // кнопка «Назад» в шапке Telegram
+    const _show=show;show=function(id){_show(id);Platform.syncBack()};
+    tg.BackButton.onClick(()=>Platform.back());this.syncBack();
+    // тактильный отклик Telegram вместо обходных путей
+    vib=function(p){if(!S.vibro||!p)return;try{const h=tg.HapticFeedback;
+      if(Array.isArray(p))h.notificationOccurred(p.length>3?'success':'error');else h.impactOccurred(p>=12?'medium':'light')}catch(e){}};
+    const _sync=syncSettings;syncSettings=function(){_sync();try{$('swVibro').disabled=false;$('swVibro').classList.toggle('on',S.vibro);$('vibroNote').textContent=T('vibroSub')}catch(e){}Platform.paint()};
+    // «Отправить в чат» вместо копирования
+    $('bShare').textContent=T('shareChat');
+    $('bShare').onclick=()=>{const link=TG_CONFIG.appLink+(mode==='daily'?'?startapp=daily':'');
+      tg.openTelegramLink('https://t.me/share/url?url='+encodeURIComponent(link)+'&text='+encodeURIComponent(lastResult))};
+    // ссылка из чата «?startapp=daily» сразу открывает задачу дня
+    try{if(tg.initDataUnsafe.start_param==='daily')setTimeout(()=>openDaily(),50)}catch(e){}
+    this.loadCloud();
+    this.initAds();
+  },
+  paint(){if(!this.tg)return;const c=S.dark?'#15171a':'#f3f1ec';try{this.tg.setHeaderColor(c);this.tg.setBackgroundColor(c)}catch(e){}},
+  syncBack(){if(!this.tg)return;const m=document.getElementById('menu').classList.contains('show');try{m?this.tg.BackButton.hide():this.tg.BackButton.show()}catch(e){}},
+  back(){
+    const open=id=>document.getElementById(id).classList.contains('show');
+    if(open('settings'))return $('bSetOk').click();
+    if(open('rules'))return $('bRulesOk').click();
+    if(open('noHints'))return $('bNoHint').click();
+    if(open('win'))return $('bMenu').click();
+    if(open('wipe'))return $('bWipeNo').click();
+    if(open('game'))return $('gBack').click();
+    if(open('daily'))return $('dBack').click();
+  },
+  // облако Telegram: «st» — настройки и прогресс, «dd_ГГГГ_ММ» — задачи дня по месяцам
+  cs(){return this.tg&&this.tg.CloudStorage},
+  loadCloud(){
+    const cs=this.cs();if(!cs)return;
+    cs.getKeys((err,keys)=>{
+      if(err)return;keys=(keys||[]).filter(k=>k==='st'||k.indexOf('dd_')===0);
+      if(!keys.length){this.cloudSave(true);return}
+      cs.getItems(keys,(err2,map)=>{
+        if(err2||!map)return;
+        let core=null;try{core=JSON.parse(map.st||'null')}catch(e){}
+        if(core&&(core.ts||0)>(S.ts||0)){
+          const dd={},late={};
+          Object.keys(map).filter(k=>k.indexOf('dd_')===0).forEach(k=>{try{const o=JSON.parse(map[k]),p=k.split('_');
+            for(const day in o){const v=o[day],key=p[1]+'-'+p[2]+'-'+String(day).padStart(2,'0');dd[key]=Math.abs(v)*1000;if(v<0)late[key]=true}}catch(e){}});
+          Object.assign(S,core,{dailyDone:dd,dailyLate:late});saveLocal();applyLang();syncSettings();refreshMenu();
+        }else this.cloudSave(true);
+      });
+    });
+  },
+  cloudSave(all){
+    const cs=this.cs();if(!cs)return;clearTimeout(this._t);
+    this._t=setTimeout(()=>{
+      const core=Object.assign({},S);delete core.dailyDone;delete core.dailyLate;
+      try{cs.setItem('st',JSON.stringify(core))}catch(e){}
+      const months={};
+      for(const k in (S.dailyDone||{})){const p=k.split('-'),mk='dd_'+p[0]+'_'+p[1],sec=Math.max(1,Math.round(S.dailyDone[k]/1000));
+        (months[mk]=months[mk]||{})[+p[2]]=(S.dailyLate&&S.dailyLate[k])?-sec:sec}
+      this._sent=this._sent||{};
+      for(const mk in months){const v=JSON.stringify(months[mk]);if(all||this._sent[mk]!==v){this._sent[mk]=v;try{cs.setItem(mk,v)}catch(e){}}}
+    },1500);
+  },
+  // реклама Adsgram (подключается, только если указаны blockId)
+  initAds(){
+    if(!TG_CONFIG.adsRewardBlock&&!TG_CONFIG.adsInterBlock)return;
+    const s=document.createElement('script');s.src='https://sad.adsgram.ai/js/sad.min.js';
+    s.onload=()=>{try{
+      if(TG_CONFIG.adsRewardBlock)this.ads.reward=window.Adsgram.init({blockId:TG_CONFIG.adsRewardBlock});
+      if(TG_CONFIG.adsInterBlock)this.ads.inter=window.Adsgram.init({blockId:TG_CONFIG.adsInterBlock});
+    }catch(e){}};
+    document.head.appendChild(s);
+  },
+  // покупки за Telegram Stars через мини-сервер
+  price(key){return this.payments?('⭐ '+TG_CONFIG.stars[PRODUCTS[key]]):null},
+  buy(key,ok){
+    if(!this.tg||!TG_CONFIG.shopUrl){toast(T('shopOnlyYandex'));return}
+    fetch(TG_CONFIG.shopUrl.replace(/\/$/,'')+'/invoice?p='+PRODUCTS[key]).then(r=>r.json()).then(d=>{
+      if(!d||!d.link)throw 0;
+      this.tg.openInvoice(d.link,status=>{
+        if(status!=='paid')return;
+        if(key==='noAds')S.noAds=true;else S.extraHints=(S.extraHints||0)+10;
+        saveS();syncShop();toast(T('thanks'));try{this.tg.HapticFeedback.notificationOccurred('success')}catch(e){}ok&&ok();
+      });
+    }).catch(()=>toast(T('payError')));
+  },
+  gameplay(){},
+  interstitial(done){
+    const ad=this.ads.inter;
+    if(!ad||S.noAds||Date.now()-this.lastAd<65000){done();return}
+    this.lastAd=Date.now();adPlaying=true;
+    ad.show().then(()=>{}).catch(()=>{}).finally(()=>{adPlaying=false;done()});
+  },
+  rewarded(onReward){
+    const ad=this.ads.reward;
+    if(!ad){onReward();return}             // реклама не настроена или недоступна — подсказка бесплатно
+    adPlaying=true;
+    ad.show().then(()=>{adPlaying=false;onReward()}).catch(()=>{adPlaying=false;onReward()});
+  }
+};
+setTimeout(()=>Platform.init(),0);
+
+const $=id=>document.getElementById(id);
+/* ================= storage ================= */
+const store={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
+const S=store.get('balance-v2',{level:store.get('balance-level',1),solved:0,best:{},streak:0,lastDaily:null,dailyDone:{},sound:true,dark:false});
+
+const DEF={color:'graphite',sound:true,sfxVol:70,music:true,musicVol:50,vibro:true,dark:false,showTimer:true};
+for(const k in DEF)if(S[k]===undefined)S[k]=DEF[k];
+function saveLocal(){store.set('balance-v2',S)}
+function saveS(){S.ts=Date.now();saveLocal();if(typeof Platform!=='undefined')Platform.cloudSave()}
+if(!S.lang){const nl=(navigator.language||'ru').toLowerCase();S.lang=/^(ru|be|uk|kk|uz|ky|tg|hy|az)/.test(nl)?'ru':'en'}
+/* ================= языки ================= */
+function plRu(k,a,b,c){const m=k%10,h=k%100;if(m===1&&h!==11)return a;if(m>=2&&m<=4&&(h<10||h>=20))return b;return c}
+function plEn(k,a,b){return k===1?a:b}
+const L={
+ru:{
+  title:'Hafta',logo:'HAFTA',sub:'логическая головоломка',daily:'Задача дня',levels:'Уровни',
+  tagNew:'новая',tagCont:'продолжить',tagPlay:'играть',
+  streakDays:'дней подряд',solvedLbl:'решено',bestLbl:n=>'лучшее '+n+'×'+n+' ⇄',
+  dStreak:'серия сейчас',dBestStreak:'лучшая серия',dMonth:'за месяц',legOn:'в свой день',legLate:'из архива',legToday:'сегодня',
+  playSolve:'Решать',playCont:'Продолжить',playView:'Посмотреть',todayPrefix:'Сегодня, ',solvedIn:t=>' · решено за '+t,noStreak:' · в серию не идёт',
+  level:k=>'Уровень '+k,archive:'Архив',tutTitle:'Обучение',tutSub:'4×4 · первая задача',
+  legend:'Нажатие: закрасить → точка → пусто. Можно вести пальцем.',
+  undo:'Отменить',reset:'Сброс',check:'Проверить',hint:'Подсказка',
+  howTo:'Как играть',
+  r1:'В каждой строке и каждом столбце закрашена <b>ровно половина</b> клеток.',
+  r2:'Число показывает, сколько закрашенных клеток <b>вокруг него</b> — среди 8 соседей, включая диагонали. Клетки с числами не закрашиваются.',
+  r3:'Закрашенные клетки не образуют <b>квадрат 2×2</b>.',
+  rEx:'Пример решения 4×4: в каждом ряду по 2 закрашенных, а у тройки ровно 3 закрашенных соседа.',
+  rNote:'Решение всегда одно, угадывать не нужно. Точкой отмечай клетки, которые точно пустые. Цифры справа и снизу — сколько закрашено в ряду.',
+  ok:'Понятно',tutBtn:'Пройти обучение',solved:'Решено',time:'время',best:'лучшее',
+  nextLevel:'Следующий уровень',share:'Скопировать результат',back:'Назад',playLevels:'Играть уровни',loading:'Готовлю задачу…',
+  settings:'Настройки',rules:'Правила',menu:'Меню',zoom:'Приближение',
+  sounds:'Звуки',soundsSub:'Щелчки при закрашивании, сигнал победы',vibro:'Вибрация',vibroSub:'Лёгкий отклик при закрашивании',
+  vibroNo:'Не поддерживается на этом устройстве',vibroIOS:'На iPhone — лёгкий тактильный отклик (iOS 17.4+)',
+  color:'Цвет закрашивания',colorSub:'Выбери, каким цветом закрашиваются клетки',dark:'Тёмная тема',darkSub:'Удобно играть вечером',
+  timer:'Таймер',timerSub:'Показывать время решения',language:'Язык',done:'Готово',wipe:'Сбросить весь прогресс',
+  wipeQ:'Сбросить прогресс?',wipeText:'Уровни, рекорды и серия дней будут удалены. Настройки сохранятся.',wipeYes:'Сбросить',cancel:'Отмена',wiped:'Прогресс сброшен',
+  noHintsT:'Подсказки закончились',noHintsP:'Посмотри короткую рекламу и получи ещё одну подсказку.',watchAd:'Смотреть рекламу',solveMyself:'Решу сам',
+  colors:['Основной','Синий','Жёлтый','Оранжевый'],tiers:['Лёгкая','Средняя','Сложная','Эксперт'],
+  dailyDoneToday:'Задача дня уже решена — приходи завтра!',alreadySolved:'Эта задача уже решена',
+  zoomOn:'Приближение: двигай поле пальцем, касание ставит отметку',zoomOff:'Обычный вид',
+  hClue0:'Вокруг <b>0</b> не может быть закрашенных клеток — все соседи пустые.',
+  hClueFull:v=>`Вокруг числа <b>${v}</b> уже ${v} ${plRu(v,'закрашенная клетка','закрашенные клетки','закрашенных клеток')} — остальные соседи пустые.`,
+  hClueAll:(v,u)=>`Числу <b>${v}</b> нужно ${v} ${plRu(v,'закрашенная клетка','закрашенные клетки','закрашенных клеток')}, а свободных соседей ровно ${u} — все они закрашены.`,
+  hClueRest:(v,miss,u)=>`Числу <b>${v}</b> не хватает ${miss}, а свободных соседей как раз ${u} — их нужно закрасить.`,
+  row:'строке',col:'столбце',
+  hLineFull:(kind,h)=>`В этой ${kind} уже закрашено ${h} из ${h} — остальные клетки пустые.`,
+  hLineWhite:(kind,h)=>`В этой ${kind} уже ${h} ${plRu(h,'пустая клетка','пустые клетки','пустых клеток')} (клетки с числами тоже пустые) — остальные нужно закрасить.`,
+  hSq:'Три клетки квадрата 2×2 уже закрашены — четвёртую закрашивать нельзя.',
+  hTrialWhite:'Попробуй мысленно закрасить эту клетку: правила быстро приведут к противоречию (ряд, число или квадрат 2×2). Значит, она <b>пустая</b>.',
+  hTrialFill:'Попробуй мысленно оставить эту клетку пустой: правила быстро приведут к противоречию. Значит, её нужно <b>закрасить</b>.',
+  hFixWhite:'Эта клетка закрашена по ошибке — здесь должно быть пусто. Я её очистила.',
+  hFixFill:'Здесь стоит точка, но эту клетку нужно закрасить. Я её очистила.',
+  hAny:'Вот одна из верных клеток.',
+  errors:k=>'Ошибок: '+k+' — они обведены',allGood:'Пока всё верно',
+  tutIntro:['Добро пожаловать! Это поле 4×4. Цель — закрасить <b>ровно половину</b> клеток в каждой строке и каждом столбце. Здесь — по 2.',
+    'Числа подсказывают, сколько закрашенных клеток <b>вокруг них</b> — среди 8 соседей, включая диагонали. Сами клетки с числами всегда пустые.',
+    'И ещё одно правило: закрашенные клетки не могут образовать <b>квадрат 2×2</b>. Давай решим первую задачу вместе.'],
+  next:'Далее',startPlay:'Начать игру',tutDone:'Первая задача решена!',tutDoneSub:'Теперь ты знаешь все правила',
+  tutEnd:'Отлично! Дальше — настоящие уровни. Если застрянешь, кнопка «Подсказка» не просто покажет ответ, а объяснит, <b>почему</b> он такой.',
+  actFill:'Нажми на подсвеченные клетки, чтобы закрасить их.',
+  actDotFirst:'Отметь подсвеченные клетки точкой: нажми на клетку <b>два раза</b>. Точкой отмечают клетки, которые точно пустые.',
+  actDot:'Поставь точки в подсвеченные клетки (два нажатия).',
+  dailySolved:'Задача дня решена',dateSolved:d=>'Задача '+d+' решена',
+  streakLbl:k=>plRu(k,'день подряд','дня подряд','дней подряд'),
+  shareDaily:(d,lab,n,t,hn,stk)=>'Hafta · '+d+' · '+lab.toLowerCase()+' '+n+'×'+n+' · '+t+(hn?' (подсказок: '+hn+')':'')+' · серия '+stk,
+  shareLevel:(l,t)=>'Hafta · уровень '+l+' · '+t,
+  pRecord:'Новый рекорд!',pRecordSub:(t,n)=>t+' на поле '+n+'×'+n,
+  pFast:['Блестяще!','Молниеносно!','Чистая логика!'],pFastSub:(lab,n,t)=>lab+' '+n+'×'+n+' за '+t,
+  pClean:['Отлично!','Безупречно!','Великолепно!','Так держать!'],pCleanSub:lab=>lab+' без единой подсказки',
+  pHinted:['Хорошая работа!','Получилось!','Решено!'],pHintedSub:'В следующий раз — без подсказок?',
+  pStreak:k=>'Серия: '+k+' '+plRu(k,'день','дня','дней')+' подряд',
+  noteHints:k=>'Подсказок: '+k+' — рекорд не засчитан',copied:'Скопировано',
+  monthsGen:['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'],
+  months:['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'],
+  wd:['Пн','Вт','Ср','Чт','Пт','Сб','Вс'],
+  date:(d,m)=>d+' '+L.ru.monthsGen[m],
+  noAdsT:'Убрать рекламу',noAdsSub:'Навсегда, без рекламы между уровнями',noAdsDone:'Реклама отключена. Спасибо!',
+  hintsT:'10 подсказок',hintsSub:'Пригодятся, когда бесплатные закончатся',hintsHave:k=>'у тебя '+k,
+  buy:'Купить',bought:'Куплено',thanks:'Спасибо за покупку!',shopOnlyYandex:'Покупки пока недоступны',
+  buyHints:p=>'Купить 10 подсказок'+(p?' — '+p:''),
+  shareChat:'Отправить в чат',payError:'Не удалось открыть оплату, попробуй позже'
+},
+en:{
+  title:'Hafta',logo:'HAFTA',sub:'logic puzzle',daily:'Daily puzzle',levels:'Levels',
+  tagNew:'new',tagCont:'continue',tagPlay:'play',
+  streakDays:'day streak',solvedLbl:'solved',bestLbl:n=>'best '+n+'×'+n+' ⇄',
+  dStreak:'current streak',dBestStreak:'best streak',dMonth:'this month',legOn:'on the day',legLate:'from archive',legToday:'today',
+  playSolve:'Solve',playCont:'Continue',playView:'View',todayPrefix:'Today, ',solvedIn:t=>' · solved in '+t,noStreak:' · doesn’t count for streak',
+  level:k=>'Level '+k,archive:'Archive',tutTitle:'Tutorial',tutSub:'4×4 · first puzzle',
+  legend:'Tap: fill → dot → empty. Drag to paint several cells.',
+  undo:'Undo',reset:'Reset',check:'Check',hint:'Hint',
+  howTo:'How to play',
+  r1:'Every row and every column has <b>exactly half</b> of its cells filled.',
+  r2:'A number shows how many filled cells are <b>around it</b> — among its 8 neighbours, diagonals included. Number cells are never filled.',
+  r3:'Filled cells never form a <b>2×2 square</b>.',
+  rEx:'A solved 4×4: 2 filled cells in every line, and the 3 has exactly 3 filled neighbours.',
+  rNote:'Every puzzle has one solution — no guessing needed. Use dots for cells you know are empty. The numbers on the right and bottom count filled cells in each line.',
+  ok:'Got it',tutBtn:'Play the tutorial',solved:'Solved',time:'time',best:'best',
+  nextLevel:'Next level',share:'Copy result',back:'Back',playLevels:'Play levels',loading:'Preparing puzzle…',
+  settings:'Settings',rules:'Rules',menu:'Menu',zoom:'Zoom',
+  sounds:'Sounds',soundsSub:'Clicks when filling, victory chime',vibro:'Vibration',vibroSub:'Light feedback when filling',
+  vibroNo:'Not supported on this device',vibroIOS:'On iPhone — a light haptic tap (iOS 17.4+)',
+  color:'Fill colour',colorSub:'Choose the colour of filled cells',dark:'Dark theme',darkSub:'Easier on the eyes at night',
+  timer:'Timer',timerSub:'Show solving time',language:'Language',done:'Done',wipe:'Reset all progress',
+  wipeQ:'Reset progress?',wipeText:'Levels, records and your streak will be deleted. Settings are kept.',wipeYes:'Reset',cancel:'Cancel',wiped:'Progress reset',
+  noHintsT:'Out of hints',noHintsP:'Watch a short ad to get one more hint.',watchAd:'Watch ad',solveMyself:'I’ll solve it myself',
+  colors:['Classic','Blue','Yellow','Orange'],tiers:['Easy','Medium','Hard','Expert'],
+  dailyDoneToday:'Today’s puzzle is solved — come back tomorrow!',alreadySolved:'This puzzle is already solved',
+  zoomOn:'Zoom: drag to move the board, tap to mark a cell',zoomOff:'Normal view',
+  hClue0:'A <b>0</b> can’t have any filled neighbours — they are all empty.',
+  hClueFull:v=>`The <b>${v}</b> already has ${v} filled ${plEn(v,'neighbour','neighbours')} — the rest are empty.`,
+  hClueAll:(v,u)=>`The <b>${v}</b> needs ${v} filled ${plEn(v,'neighbour','neighbours')}, and exactly ${u} are free — fill them all.`,
+  hClueRest:(v,miss,u)=>`The <b>${v}</b> is missing ${miss}, and exactly ${u} ${plEn(u,'neighbour is','neighbours are')} free — fill ${plEn(u,'it','them')}.`,
+  row:'row',col:'column',
+  hLineFull:(kind,h)=>`This ${kind} already has ${h} of ${h} filled — the other cells are empty.`,
+  hLineWhite:(kind,h)=>`This ${kind} already has ${h} empty cells (number cells count as empty) — the rest must be filled.`,
+  hSq:'Three cells of this 2×2 square are filled — the fourth can’t be.',
+  hTrialWhite:'Imagine filling this cell: the rules quickly lead to a contradiction (a line, a number or a 2×2 square). So it must be <b>empty</b>.',
+  hTrialFill:'Imagine leaving this cell empty: the rules quickly lead to a contradiction. So it must be <b>filled</b>.',
+  hFixWhite:'This cell was filled by mistake — it should be empty. I’ve cleared it.',
+  hFixFill:'This cell has a dot, but it should be filled. I’ve cleared it.',
+  hAny:'Here is one correct cell.',
+  errors:k=>k+' '+plEn(k,'mistake','mistakes')+' — circled on the board',allGood:'All good so far',
+  tutIntro:['Welcome! This is a 4×4 board. Your goal: fill <b>exactly half</b> of the cells in every row and every column — here, 2 each.',
+    'Numbers tell you how many filled cells are <b>around them</b> — among the 8 neighbours, diagonals included. Number cells are always empty.',
+    'One more rule: filled cells can’t form a <b>2×2 square</b>. Let’s solve your first puzzle together.'],
+  next:'Next',startPlay:'Start playing',tutDone:'First puzzle solved!',tutDoneSub:'Now you know all the rules',
+  tutEnd:'Great! Real levels are next. If you get stuck, the Hint button won’t just show the answer — it explains <b>why</b>.',
+  actFill:'Tap the highlighted cells to fill them.',
+  actDotFirst:'Mark the highlighted cells with a dot: tap a cell <b>twice</b>. Dots mark cells you know are empty.',
+  actDot:'Put dots in the highlighted cells (two taps).',
+  dailySolved:'Daily puzzle solved',dateSolved:d=>'Puzzle of '+d+' solved',
+  streakLbl:k=>plEn(k,'day streak','day streak'),
+  shareDaily:(d,lab,n,t,hn,stk)=>'Hafta · '+d+' · '+lab.toLowerCase()+' '+n+'×'+n+' · '+t+(hn?' ('+hn+' '+plEn(hn,'hint','hints')+')':'')+' · streak '+stk,
+  shareLevel:(l,t)=>'Hafta · level '+l+' · '+t,
+  pRecord:'New record!',pRecordSub:(t,n)=>t+' on '+n+'×'+n,
+  pFast:['Brilliant!','Lightning fast!','Pure logic!'],pFastSub:(lab,n,t)=>lab+' '+n+'×'+n+' in '+t,
+  pClean:['Excellent!','Flawless!','Superb!','Keep it up!'],pCleanSub:lab=>lab+' with no hints',
+  pHinted:['Nice work!','You did it!','Solved!'],pHintedSub:'Next time without hints?',
+  pStreak:k=>'Streak: '+k+' '+plEn(k,'day','days')+' in a row',
+  noteHints:k=>k+' '+plEn(k,'hint','hints')+' used — record not counted',copied:'Copied',
+  monthsGen:['January','February','March','April','May','June','July','August','September','October','November','December'],
+  months:['January','February','March','April','May','June','July','August','September','October','November','December'],
+  wd:['Mo','Tu','We','Th','Fr','Sa','Su'],
+  date:(d,m)=>L.en.monthsGen[m]+' '+d,
+  noAdsT:'Remove ads',noAdsSub:'Forever, no ads between levels',noAdsDone:'Ads are off. Thank you!',
+  hintsT:'10 hints',hintsSub:'Handy when the free ones run out',hintsHave:k=>'you have '+k,
+  buy:'Buy',bought:'Purchased',thanks:'Thanks for your purchase!',shopOnlyYandex:'Purchases are not available yet',
+  buyHints:p=>'Buy 10 hints'+(p?' — '+p:''),
+  shareChat:'Send to chat',payError:'Couldn’t open the payment, try again later'
+}};
+const TIER_IDX={'Лёгкая':0,'Средняя':1,'Сложная':2,'Эксперт':3};
+function T(k){return (L[S.lang]||L.ru)[k]}
+function tier(nameRu){return T('tiers')[TIER_IDX[nameRu]]}
+function applyLang(){
+  document.documentElement.lang=S.lang;document.title=T('title');
+  document.querySelectorAll('[data-t]').forEach(el=>{const v=T(el.dataset.t);if(typeof v==='string')el.innerHTML=v});
+  document.querySelectorAll('[data-ta]').forEach(el=>el.setAttribute('aria-label',T(el.dataset.ta)));
+  document.querySelectorAll('#langSeg button').forEach(b=>b.classList.toggle('on',b.dataset.lang===S.lang));
+}
+
+
+/* ================= sound effects ================= */
+let AC=null;
+function ac(){try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();return AC}catch(e){return null}}
+function beep(freq,dur=.06,type='sine',vol=.08,when=0){
+  if(!S.sound||!S.sfxVol||adPlaying)return;
+  const A=ac();if(!A)return;
+  try{
+    const t=A.currentTime+when,o=A.createOscillator(),g=A.createGain();
+    o.type=type;o.frequency.value=freq;g.gain.setValueAtTime(vol*S.sfxVol/70,t);g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+    o.connect(g).connect(A.destination);o.start(t);o.stop(t+dur+.02);
+  }catch(e){}
+}
+const sndFill=()=>beep(392,.06,'sine',.05),sndDot=()=>beep(520,.04,'sine',.05),sndClear=()=>beep(330,.04,'sine',.04);
+const sndWin=()=>{[523,659,784,1046].forEach((f,i)=>beep(f,.22,'sine',.07,i*.11))};
+const sndErr=()=>beep(140,.12,'square',.04);
+
+/* ================= vibration ================= */
+/* Android: navigator.vibrate. iPhone (Safari 17.4+): скрытый переключатель
+   <input type="checkbox" switch> — его нажатие даёт системный тактильный отклик. */
+const hasVibrateAPI=typeof navigator!=='undefined'&&typeof navigator.vibrate==='function';
+const isIOS=/iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+const canVibrate=hasVibrateAPI||isIOS;
+let hapLabel=null;
+function iosTick(){
+  try{
+    if(!hapLabel){
+      const inp=document.createElement('input');inp.type='checkbox';inp.setAttribute('switch','');inp.id='hapticSwitch';
+      const lb=document.createElement('label');lb.htmlFor='hapticSwitch';
+      const css='position:fixed;left:-200px;top:0;width:1px;height:1px;opacity:0;pointer-events:none';
+      inp.style.cssText=css;lb.style.cssText=css;document.body.append(inp,lb);hapLabel=lb;
+    }
+    hapLabel.click();
+  }catch(e){}
+}
+function vib(p){
+  if(!S.vibro||!canVibrate||!p)return;
+  if(hasVibrateAPI){try{navigator.vibrate(p)}catch(e){}return}
+  if(Array.isArray(p)){let t=0;p.forEach((d,i)=>{if(i%2===0)setTimeout(iosTick,t);t+=d})}
+  else iosTick();
+}
+
+
+
+/* ================= generator & solver ================= */
+function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function shuffle(a,r){for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+const NBC={};
+function nbrs(n){if(NBC[n])return NBC[n];const nb=[];for(let i=0;i<n*n;i++){const r=Math.floor(i/n),c=i%n,a=[];for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){if(!dr&&!dc)continue;const y=r+dr,x=c+dc;if(y>=0&&x>=0&&y<n&&x<n)a.push(y*n+x)}nb.push(a)}return NBC[n]=nb}
+function genSolution(n,r){
+  const h=n/2,g=Array(n*n).fill(-1),rs=Array(n).fill(0),rw=Array(n).fill(0),cs=Array(n).fill(0),cw=Array(n).fill(0);let steps=0;
+  function go(i){
+    if(i===n*n)return true;if(++steps>200000)return false;
+    const y=Math.floor(i/n),x=i%n;
+    for(const v of (r()<.5?[1,0]:[0,1])){
+      if(v){if(rs[y]>=h||cs[x]>=h)continue;if(y&&x&&g[i-1]===1&&g[i-n]===1&&g[i-n-1]===1)continue;rs[y]++;cs[x]++}
+      else{if(rw[y]>=h||cw[x]>=h)continue;rw[y]++;cw[x]++}
+      g[i]=v;if(go(i+1))return true;
+      g[i]=-1;if(v){rs[y]--;cs[x]--}else{rw[y]--;cw[x]--}
+    }
+    return false;
+  }
+  return go(0)?g:null;
+}
+function countSol(n,clues,limit=2,nodeLimit=400000,known=null){
+  const h=n/2,N=n*n,nb=nbrs(n),g=Array(N).fill(-1);
+  const isClue=Array(N).fill(false),cv=Array(N).fill(0),sh=Array(N).fill(0),un=Array(N).fill(0),cof=[...Array(N)].map(()=>[]);
+  for(const k in clues){const i=+k;isClue[i]=true;cv[i]=clues[k];un[i]=nb[i].length;for(const j of nb[i])cof[j].push(i)}
+  const rs=Array(n).fill(0),rw=Array(n).fill(0),cs=Array(n).fill(0),cw=Array(n).fill(0);
+  let found=0,nodes=0,aborted=false;
+  function go(i){
+    if(i===N){found++;return}
+    if(++nodes>nodeLimit){aborted=true;return}
+    const y=Math.floor(i/n),x=i%n;
+    let opts=isClue[i]?[0]:[1,0];
+    if(known&&known[i]>=0&&!isClue[i])opts=[known[i]];
+    for(const v of opts){
+      if(v){if(rs[y]>=h||cs[x]>=h)continue;if(y&&x&&g[i-1]===1&&g[i-n]===1&&g[i-n-1]===1)continue}
+      else{if(rw[y]>=h||cw[x]>=h)continue}
+      let ok=true;for(const k of cof[i]){const s=sh[k]+v,u=un[k]-1;if(s>cv[k]||s+u<cv[k]){ok=false;break}}
+      if(!ok)continue;
+      g[i]=v;if(v){rs[y]++;cs[x]++}else{rw[y]++;cw[x]++}
+      for(const k of cof[i]){un[k]--;sh[k]+=v}
+      go(i+1);
+      for(const k of cof[i]){un[k]++;sh[k]-=v}
+      g[i]=-1;if(v){rs[y]--;cs[x]--}else{rw[y]--;cw[x]--}
+      if(found>=limit||aborted)return;
+    }
+  }
+  go(0);return{count:found,aborted};
+}
+/* ---------- логический решатель: решает как человек и измеряет сложность ----------
+   Шаг 1 (простые выводы): число «насыщено», ряд набрал половину, три клетки квадрата 2×2.
+   Шаг 2 (проба): «если тут закрасить — получится противоречие, значит пусто».
+   Сложность = сколько раз пришлось применить пробу. Решается логикой ⇒ решение единственное. */
+function propagate(g,c){
+  const n=c.n,h=c.h,nb=c.nb,cl=c.cl,cv=c.cv;
+  let changed=true;
+  while(changed){
+    changed=false;
+    for(let r=0;r<n;r++){let s=0,w=0;for(let x=0;x<n;x++){const v=g[r*n+x];if(v===1)s++;else if(v===0)w++}
+      if(s>h||w>h)return false;
+      if(s+w<n&&(s===h||w===h)){const f=s===h?0:1;for(let x=0;x<n;x++)if(g[r*n+x]<0)g[r*n+x]=f;changed=true}}
+    for(let x=0;x<n;x++){let s=0,w=0;for(let r=0;r<n;r++){const v=g[r*n+x];if(v===1)s++;else if(v===0)w++}
+      if(s>h||w>h)return false;
+      if(s+w<n&&(s===h||w===h)){const f=s===h?0:1;for(let r=0;r<n;r++)if(g[r*n+x]<0)g[r*n+x]=f;changed=true}}
+    for(let k=0;k<cl.length;k++){const v=cv[k],ns=nb[cl[k]];let s=0,u=0;for(const j of ns){if(g[j]===1)s++;else if(g[j]<0)u++}
+      if(s>v||s+u<v)return false;
+      if(u&&(s===v||s+u===v)){const f=s===v?0:1;for(const j of ns)if(g[j]<0)g[j]=f;changed=true}}
+    for(let r=0;r<n-1;r++)for(let x=0;x<n-1;x++){const a=r*n+x;let s=0,uc=0,u=-1;
+      for(const j of [a,a+1,a+n,a+n+1]){if(g[j]===1)s++;else if(g[j]<0){uc++;u=j}}
+      if(s===4)return false;if(s===3&&uc===1){g[u]=0;changed=true}}
+  }
+  return true;
+}
+function rate(n,clues,maxT=99){
+  const cl=Object.keys(clues).map(Number),c={n,h:n/2,nb:nbrs(n),cl,cv:cl.map(k=>clues[k])};
+  const g=new Int8Array(n*n).fill(-1);for(const i of cl)g[i]=0;
+  if(!propagate(g,c))return null;
+  let trials=0;
+  for(;;){
+    if(g.indexOf(-1)<0)return{trials};
+    let found=false;
+    outer:for(let i=0;i<g.length;i++){if(g[i]>=0)continue;
+      for(const v of [1,0]){const g2=g.slice();g2[i]=v;if(!propagate(g2,c)){g[i]=1-v;found=true;break outer}}}
+    if(!found)return null;
+    if(++trials>maxT)return null;
+    if(!propagate(g,c))return null;
+  }
+}
+const TIERS=[
+  {name:'Лёгкая',  min:0,max:0},
+  {name:'Средняя', min:1,max:3},
+  {name:'Сложная', min:4,max:8},
+  {name:'Эксперт', min:9,max:16}
+];
+function tierName(t){return t<=0?'Лёгкая':t<=3?'Средняя':t<=8?'Сложная':'Эксперт'}
+const DOTS={'Лёгкая':'●○○○','Средняя':'●●○○','Сложная':'●●●○','Эксперт':'●●●●'};
+/* Кривая сложности: размер поля и диапазон «проб» для каждого уровня.
+   Внутри каждой ступени — волна: каждый 5-й уровень чуть легче, чтобы была передышка. */
+function levelSpec(l){
+  let spec;
+  if(l<=3)spec={n:6,t:0};
+  else if(l<=6)spec={n:6,t:1};
+  else if(l<=10)spec={n:8,t:0};
+  else if(l<=18)spec={n:8,t:1};
+  else if(l<=26)spec={n:8,t:2};
+  else if(l<=32)spec={n:10,t:1};
+  else if(l<=45)spec={n:10,t:2};
+  else spec={n:l%5===0?8:10,t:l%5===0?2:3};
+  if(l>10&&l%5===0&&spec.t>0&&l<=45)spec={n:spec.n,t:spec.t-1};
+  return spec;
+}
+const LIM={6:100000,8:300000,10:400000};
+function makeRated(seed,n,tier,attempts=10){
+  const r=rng(seed),nb=nbrs(n),T=TIERS[tier];let best=null;
+  for(let a=0;a<attempts;a++){
+    let sol=null;while(!sol)sol=genSolution(n,r);
+    const clues={};sol.forEach((v,i)=>{if(!v)clues[i]=nb[i].reduce((s,j)=>s+sol[j],0)});
+    for(const k of shuffle(Object.keys(clues).map(Number),r)){const v=clues[k];delete clues[k];const res=countSol(n,clues,2,LIM[n]);if(res.count!==1||res.aborted)clues[k]=v}
+    const spare=shuffle(sol.map((v,i)=>(!v&&!(i in clues))?i:-1).filter(i=>i>=0),r);
+    let rt=rate(n,clues,T.max);
+    while(rt===null&&spare.length){const i=spare.pop();clues[i]=nb[i].reduce((s,j)=>s+sol[j],0);rt=rate(n,clues,T.max)}
+    if(rt===null)continue;
+    const cand={n,sol,clues:{...clues},trials:rt.trials};
+    if(rt.trials>=T.min)return cand;
+    if(!best||cand.trials>best.trials)best=cand;
+  }
+  return best;
+}
+const GEN_V=2;
+const TUT_SEED=47;
+function cachedPuzzle(id,make){
+  const k='balance-puz-'+GEN_V+'-'+id;let P=store.get(k,null);
+  if(!P||!P.sol){P=make();store.set(k,P)}
+  return P;
+}
+function pruneCache(){try{Object.keys(localStorage).filter(k=>k.startsWith('balance-puz-')).sort().slice(0,-40).forEach(k=>localStorage.removeItem(k))}catch(e){}}
+function levelPuzzle(l){const s=levelSpec(l);return makeRated(l*48271+11,s.n,s.t)}
+function todayKey(d=new Date()){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+/* Задача дня по дням недели: понедельник лёгкий, к выходным сложнее */
+const DAILY=[{n:10,t:3},{n:8,t:1},{n:8,t:2},{n:8,t:2},{n:10,t:1},{n:10,t:2},{n:10,t:2}]; // вс,пн,вт,ср,чт,пт,сб
+function dailySpec(key){const[y,m,d]=key.split('-').map(Number);return DAILY[new Date(y,m-1,d).getDay()]}
+function dailyPuzzle(key){const seed=+key.replace(/-/g,''),s=dailySpec(key);return makeRated(seed*7+3,s.n,s.t)}
+function prettyDate(key){const[y,m,d]=key.split('-').map(Number);return T('date')(d,m-1)}
+
+/* ================= menu ================= */
+function fmt(ms){const s=Math.floor(ms/1000);return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')}
+function refreshMenu(){
+  const tk=todayKey();
+  // streak breaks if yesterday was missed
+  if(S.lastDaily){const y=new Date();y.setDate(y.getDate()-1);if(S.lastDaily!==tk&&S.lastDaily!==todayKey(y)){S.streak=0;saveS()}}
+  const ds=dailySpec(tk);document.getElementById('mDailyDate').textContent=prettyDate(tk)+' · '+ds.n+'×'+ds.n+' · '+tier(TIERS[ds.t].name);
+  const dd=S.dailyDone[tk];
+  document.getElementById('mDailyTag').textContent=dd?('✓ '+fmt(dd)):(store.get('balance-prog-d'+GEN_V+'-'+tk,null)?T('tagCont'):T('tagNew'));
+  const ls=levelSpec(S.level);document.getElementById('mLevelSub').textContent=T('level')(S.level)+' · '+ls.n+'×'+ls.n+' · '+tier(TIERS[ls.t].name);
+  document.getElementById('mLevelTag').textContent=store.get('balance-prog-l'+GEN_V+'-'+S.level,null)?T('tagCont'):T('tagPlay');
+  document.getElementById('sStreak').textContent=S.streak;
+  document.getElementById('sSolved').textContent=S.solved;
+  const bs=bestShow||ls.n;document.getElementById('sBest').textContent=S.best[bs]?fmt(S.best[bs]):'—';document.getElementById('sBestLbl').textContent=T('bestLbl')(bs);
+  document.body.classList.toggle('dark',S.dark);
+}
+let bestShow=null;
+$('bestTile').onclick=()=>{const cur=bestShow||levelSpec(S.level).n;bestShow=cur===6?8:cur===8?10:6;refreshMenu()};
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('show',s.id===id))}
+document.getElementById('mDaily').onclick=()=>openDaily();
+
+/* ================= календарь задач дня ================= */
+const ARCHIVE_START='2026-10-01';          // самая ранняя задача в архиве (дата запуска игры)
+let calY,calM,selKey;
+function keyOf(y,m,d){return y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0')}
+function openDaily(){const t=new Date();calY=t.getFullYear();calM=t.getMonth();selKey=todayKey();refreshMenu();renderCal();show('daily')}
+function renderCal(){
+  const tk=todayKey(),g=$('cGrid');g.innerHTML='';
+  $('cTitle').textContent=T('months')[calM]+' '+calY;
+  const [sy,sm]=ARCHIVE_START.split('-').map(Number),t=new Date();
+  $('cPrev').disabled=(calY<sy||(calY===sy&&calM<=sm-1));
+  $('cNext').disabled=(calY>t.getFullYear()||(calY===t.getFullYear()&&calM>=t.getMonth()));
+  // заголовки дней недели с отметкой сложности
+  const order=[1,2,3,4,5,6,0];
+  T('wd').forEach((w,i)=>{const sp=DAILY[order[i]];const d=document.createElement('div');d.className='wd';d.innerHTML=w+'<i>'+DOTS[TIERS[sp.t].name].replace(/○/g,'·')+'</i>';g.appendChild(d)});
+  const first=new Date(calY,calM,1),offset=(first.getDay()+6)%7,days=new Date(calY,calM+1,0).getDate();
+  for(let i=0;i<offset;i++)g.appendChild(document.createElement('div'));
+  let monthSolved=0;
+  for(let d=1;d<=days;d++){
+    const k=keyOf(calY,calM,d),el=document.createElement('div');
+    let cls='day';
+    const future=k>tk||k<ARCHIVE_START;
+    if(future)cls+=' future';
+    if(S.dailyDone[k]){cls+=S.dailyLate&&S.dailyLate[k]?' late':' solved';monthSolved++}
+    else if(store.get('balance-prog-d'+GEN_V+'-'+k,null))cls+=' prog';
+    if(k===tk)cls+=' today';
+    if(k===selKey)cls+=' sel';
+    el.className=cls;el.textContent=d;
+    if(!future)el.onclick=()=>{selKey=k;renderCal()};
+    g.appendChild(el);
+  }
+  $('dStreak').textContent=S.streak;$('dBestStreak').textContent=Math.max(S.bestStreak||0,S.streak);$('dMonth').textContent=monthSolved;
+  // панель выбранного дня
+  const sp=dailySpec(selKey),done=S.dailyDone[selKey],prog=store.get('balance-prog-d'+GEN_V+'-'+selKey,null);
+  $('iTitle').textContent=(selKey===tk?T('todayPrefix'):'')+prettyDate(selKey);
+  $('iSub').textContent=sp.n+'×'+sp.n+' · '+tier(TIERS[sp.t].name)+(done?T('solvedIn')(fmt(done)):'')+(selKey!==tk&&!done?T('noStreak'):'');
+  $('iPlay').textContent=done?T('playView'):prog?T('playCont'):T('playSolve');
+}
+$('cPrev').onclick=()=>{calM--;if(calM<0){calM=11;calY--}renderCal()};
+$('cNext').onclick=()=>{calM++;if(calM>11){calM=0;calY++}renderCal()};
+$('dBack').onclick=()=>{refreshMenu();show('menu')};
+$('iPlay').onclick=()=>startGame('daily',selKey);
+document.getElementById('mLevels').onclick=()=>startGame('level');
+document.getElementById('mRules').onclick=()=>openRules();
+document.getElementById('mSettings').onclick=()=>openSettings();
+
+/* ================= settings ================= */
+function inGame(){return $('game').classList.contains('show')}
+function syncSettings(){
+  $('swSfx').classList.toggle('on',S.sound);
+  $('swVibro').classList.toggle('on',S.vibro&&canVibrate);$('swVibro').disabled=!canVibrate;
+  $('vibroNote').textContent=!canVibrate?T('vibroNo'):(isIOS&&!hasVibrateAPI)?T('vibroIOS'):T('vibroSub');
+  $('swDark').classList.toggle('on',S.dark);$('swTimer').classList.toggle('on',S.showTimer);
+  $('volSfx').value=S.sfxVol;
+  $('volSfx').disabled=!S.sound;
+  document.body.classList.toggle('dark',S.dark);
+  document.body.dataset.color=S.color;
+  const box=$('swatches');box.innerHTML='';
+  COLORS.forEach((c,ci)=>{const b=document.createElement('button');b.className='swatch'+(S.color===c.id?' on':'');
+    b.innerHTML='<i style="background:'+(S.dark?c.dark:c.light)+'"></i>'+T('colors')[ci];
+    b.onclick=()=>{S.color=c.id;saveS();syncSettings();sndFill();vib(12)};box.appendChild(b)});
+  $('timer').style.visibility=S.showTimer?'visible':'hidden';
+  if(typeof syncShop==='function')try{syncShop()}catch(e){}
+}
+const COLORS=[
+  {id:'graphite',name:'Основной',light:'#23272e',dark:'#e2ddd2'},
+  {id:'blue',name:'Синий',light:'#7f9cc4',dark:'#8ea8cb'},
+  {id:'yellow',name:'Жёлтый',light:'#d9b65f',dark:'#d6bb6c'},
+  {id:'orange',name:'Оранжевый',light:'#e0996c',dark:'#d99a70'}
+];
+function syncShop(){
+  const pNo=Platform.price('noAds'),pH=Platform.price('hints'),on=!!Platform.payments;
+  $('bBuyNoAds').textContent=S.noAds?T('bought'):(pNo||T('buy'));$('bBuyNoAds').disabled=!!S.noAds||!on;
+  $('noAdsSub').textContent=S.noAds?T('noAdsDone'):on?T('noAdsSub'):T('shopOnlyYandex');
+  $('bBuyHints').textContent=pH||T('buy');$('bBuyHints').disabled=!on;
+  $('hintsSub').textContent=(on?T('hintsSub'):T('shopOnlyYandex'))+(S.extraHints?' · '+T('hintsHave')(S.extraHints):'');
+  $('bBuyHints2').textContent=T('buyHints')(pH);$('bBuyHints2').style.display=(on&&pH)?'':'none';
+  // пока покупки не подключены в Консоли (нет товаров в каталоге) — прячем магазин целиком
+  $('shopNoAds').style.display=(pNo||S.noAds)?'':'none';$('shopHints').style.display=pH?'':'none';
+}
+$('bBuyNoAds').onclick=()=>Platform.buy('noAds');
+$('bBuyHints').onclick=()=>Platform.buy('hints');
+let wasPaused=true;
+function openSettings(){wasPaused=paused;if(inGame())pause();syncSettings();syncShop();$('settings').classList.add('show')}
+$('gSettings').onclick=openSettings;
+$('swSfx').onclick=()=>{S.sound=!S.sound;saveS();syncSettings();beep(440)};
+$('swVibro').onclick=()=>{S.vibro=!S.vibro;saveS();syncSettings();vib(20)};
+$('swDark').onclick=()=>{S.dark=!S.dark;saveS();syncSettings()};
+$('swTimer').onclick=()=>{S.showTimer=!S.showTimer;saveS();syncSettings()};
+$('volSfx').oninput=e=>{S.sfxVol=+e.target.value;saveS()};
+$('volSfx').onchange=()=>sndFill();
+document.querySelectorAll('#langSeg button').forEach(b=>b.onclick=()=>{S.lang=b.dataset.lang;S.langChosen=true;saveS();applyLang();syncSettings();refreshMenu();if(inGame()&&P)setTitle()});
+$('bSetOk').onclick=()=>{$('settings').classList.remove('show');if(inGame()&&!solved)resume();else refreshMenu()};
+$('bWipe').onclick=()=>{$('settings').classList.remove('show');$('wipe').classList.add('show')};
+$('bWipeNo').onclick=()=>{$('wipe').classList.remove('show');$('settings').classList.add('show')};
+$('bWipeYes').onclick=()=>{
+  try{Object.keys(localStorage).filter(k=>k.startsWith('balance-prog-')).forEach(k=>localStorage.removeItem(k))}catch(e){}
+  Object.assign(S,{level:1,solved:0,best:{},streak:0,bestStreak:0,lastDaily:null,dailyDone:{},dailyLate:{}});saveS();
+  $('wipe').classList.remove('show');refreshMenu();show('menu');toast(T('wiped'));
+};
+
+/* ================= game ================= */
+let mode,pid,P,n,st,hist,elapsed=0,tStart=0,tick,solved=false,usedHints=0,hintsLeft=3,NB,CTX,paused=true;
+let zoomed=false,baseCs=40,cross=-1,crossT=null,focusSet=new Set(),targetSet=new Set();
+const board=$('board');
+function pl(k,a,b,c){const m=k%10,h=k%100;if(m===1&&h!==11)return a;if(m>=2&&m<=4&&(h<10||h>=20))return b;return c}
+
+/* обучающая задача 4×4 (решается только простыми правилами) */
+const TUT=makeRated(TUT_SEED,4,0);
+
+let dKey=null,afterTutorial=null;
+function startGame(m,key){
+  if(m!=='tutorial'&&!S.tutorialDone){afterTutorial=[m,key];m='tutorial'}
+  mode=m;dKey=key||todayKey();
+  $('loading').classList.add('show');
+  setTimeout(()=>{try{openGame(m)}finally{$('loading').classList.remove('show')}},40);
+}
+function setTitle(){
+  if(mode==='tutorial'){$('gTitle').innerHTML=T('tutTitle')+'<small>'+T('tutSub')+'</small>';return}
+  const label=tierName(P.trials);
+  if(mode==='daily')$('gTitle').innerHTML=(dKey===todayKey()?T('daily'):T('archive'))+'<small>'+prettyDate(dKey)+' · '+P.n+'×'+P.n+' · '+tier(label)+'</small>';
+  else $('gTitle').innerHTML=T('level')(curLevel)+'<small>'+P.n+'×'+P.n+' · '+tier(label)+' '+DOTS[label]+'</small>';
+}
+let curLevel=1;
+function setPuzzle(){n=P.n;NB=nbrs(n);const cl=Object.keys(P.clues).map(Number);CTX={n,h:n/2,nb:NB,cl,cv:cl.map(k=>P.clues[k])}}
+function openGame(m){
+  document.body.classList.toggle('tut',m==='tutorial');
+  hideCoach(true);zoomed=false;cross=-1;
+  let label;
+  if(m==='tutorial'){P=TUT;pid='tutorial'}
+  else if(m==='daily'){const k=dKey;pid='d'+GEN_V+'-'+k;P=cachedPuzzle(pid,()=>dailyPuzzle(k));}
+  else{curLevel=S.level;pid='l'+GEN_V+'-'+S.level;P=cachedPuzzle(pid,()=>levelPuzzle(S.level));}
+  pruneCache();setPuzzle();setTitle();
+  st=Array(n*n).fill(-1);for(const k in P.clues)st[k]=0;
+  elapsed=0;usedHints=0;hintsLeft=3;hist=[];solved=false;
+  if(m==='tutorial'){show('game');build();render();tutStart();return}
+  const prog=store.get('balance-prog-'+pid,null);
+  if(prog&&prog.st&&prog.st.length===n*n){st=prog.st;elapsed=prog.t||0;usedHints=prog.u||0;hintsLeft=prog.h??3}
+  solved=(m==='daily'&&!!S.dailyDone[dKey]);
+  if(solved)for(let i=0;i<n*n;i++)if(!(i in P.clues))st[i]=P.sol[i];
+  show('game');build();render();
+  if(solved){toast(dKey===todayKey()?T('dailyDoneToday'):T('alreadySolved'));$('timer').textContent=fmt(S.dailyDone[dKey])}
+  else resume();
+  if(m==='level'){const nx=S.level+1;setTimeout(()=>cachedPuzzle('l'+GEN_V+'-'+nx,()=>levelPuzzle(nx)),1500)}
+}
+function resume(){if(solved||mode==='tutorial')return;paused=false;tStart=Date.now();clearInterval(tick);tick=setInterval(updTimer,500);updTimer();Platform.gameplay(true)}
+function pause(){if(paused)return;elapsed+=Date.now()-tStart;paused=true;clearInterval(tick);saveProg();Platform.gameplay(false)}
+function curTime(){return elapsed+(paused?0:Date.now()-tStart)}
+function updTimer(){$('timer').textContent=fmt(curTime())}
+function saveProg(){if(!solved&&mode!=='tutorial')store.set('balance-prog-'+pid,{st,t:curTime(),u:usedHints,h:hintsLeft})}
+$('gBack').onclick=()=>{pause();hideCoach(true);document.body.classList.remove('tut');refreshMenu();if(mode==='daily'){renderCal();show('daily')}else show('menu')};
+document.addEventListener('visibilitychange',()=>{if(document.hidden)pause();else if($('game').classList.contains('show')&&!anyOverlay())resume()});
+function anyOverlay(){return !!document.querySelector('.overlay.show')}
+
+/* ---------- поле ---------- */
+let cells=[],rowC=[],colC=[];
+function build(){
+  const wrap=$('wrap');
+  wrap.classList.remove('zoom');
+  const s=Math.min(wrap.clientWidth,wrap.clientHeight);
+  baseCs=Math.floor(Math.min(n<=6?84:n<=8?72:62,s/(n+0.7)));
+  const cs=zoomed?Math.max(48,baseCs):baseCs;
+  wrap.classList.toggle('zoom',zoomed);
+  $('gZoom').style.display=(baseCs<42&&mode!=='tutorial')?'':'none';
+  $('gZoom').classList.toggle('on',zoomed);
+  document.documentElement.style.setProperty('--cs',cs+'px');
+  board.style.gridTemplateColumns=`repeat(${n},var(--cs)) calc(var(--cs)*.7)`;
+  board.innerHTML='';cells=[];rowC=[];colC=[];
+  for(let r=0;r<n;r++){
+    for(let c=0;c<n;c++){
+      const i=r*n+c,d=document.createElement('div');
+      d.dataset.i=i;d.className='cell'+(c===0?' c0':'')+(r===0?' r0':'');
+      if(i in P.clues){d.classList.add('clue');d.textContent=P.clues[i]}
+      board.appendChild(d);cells.push(d);
+    }
+    const rc=document.createElement('div');rc.className='cnt';board.appendChild(rc);rowC.push(rc);
+  }
+  for(let c=0;c<n;c++){const cc=document.createElement('div');cc.className='cnt';cc.style.height='calc(var(--cs)*.7)';board.appendChild(cc);colC.push(cc)}
+}
+function render(){
+  if(!cells.length)return;
+  const h=n/2,sq=new Set();
+  for(let r=0;r<n-1;r++)for(let c=0;c<n-1;c++){const i=r*n+c;if(st[i]===1&&st[i+1]===1&&st[i+n]===1&&st[i+n+1]===1){sq.add(i);sq.add(i+1);sq.add(i+n);sq.add(i+n+1)}}
+  const cr=cross>=0?Math.floor(cross/n):-1,cc=cross>=0?cross%n:-1;
+  for(let i=0;i<n*n;i++){
+    const d=cells[i];d.classList.remove('wrong');
+    d.classList.toggle('cross',cross>=0&&(Math.floor(i/n)===cr||i%n===cc));
+    d.classList.toggle('focus',focusSet.has(i));
+    d.classList.toggle('target',targetSet.has(i));
+    if(i in P.clues){
+      let s=0,u=0;for(const j of NB[i]){if(st[j]===1)s++;else if(st[j]===-1)u++}
+      const v=P.clues[i];d.classList.toggle('bad',s>v||s+u<v);d.classList.toggle('done',s===v);continue;
+    }
+    d.classList.toggle('on',st[i]===1);d.classList.toggle('dot',st[i]===0);d.classList.toggle('sq',sq.has(i));
+  }
+  for(let r=0;r<n;r++){let s=0;for(let c=0;c<n;c++)s+=st[r*n+c]===1;rowC[r].textContent=s+'/'+h;rowC[r].className='cnt'+(s===h?' full':s>h?' over':'')}
+  for(let c=0;c<n;c++){let s=0;for(let r=0;r<n;r++)s+=st[r*n+c]===1;colC[c].textContent=s+'/'+h;colC[c].className='cnt'+(s===h?' full':s>h?' over':'')}
+  $('bUndo').disabled=!hist.length||solved;
+  $('hintBadge').textContent=hintsLeft>0?hintsLeft:(S.extraHints>0?S.extraHints:'+');
+}
+function isSolved(){for(let i=0;i<n*n;i++){if(!(i in P.clues)&&(st[i]===1)!==(P.sol[i]===1))return false}return true}
+
+/* ---------- ввод: касание, ведение пальцем, режим приближения ---------- */
+let paint=null,tapStart=null;
+function cellAt(e){const el=document.elementFromPoint(e.clientX,e.clientY);if(!el||!el.dataset||el.dataset.i===undefined)return -1;return +el.dataset.i}
+function sndFor(v){v===1?sndFill():v===0?sndDot():sndClear();vib(v===1?12:v===0?5:0)}
+function allowed(i){if(i<0||i in P.clues)return false;if(mode==='tutorial')return !!tutStepCur&&targetSet.has(i);return true}
+function setCross(i){clearTimeout(crossT);cross=i}
+function releaseCross(){clearTimeout(crossT);crossT=setTimeout(()=>{cross=-1;render()},1200)}
+function tapCell(i){
+  const next=st[i]===-1?1:st[i]===1?0:-1;
+  hist.push(st.slice());st[i]=next;sndFor(next);
+  if(mode!=='tutorial'&&$('coach').classList.contains('show'))hideCoach(true);
+  return next;
+}
+board.addEventListener('pointerdown',e=>{
+  if(solved)return;const i=cellAt(e);
+  if(i>=0)setCross(i);
+  if(zoomed){tapStart={x:e.clientX,y:e.clientY,i};render();return}   // в приближении: палец двигает поле, касание — ставит отметку
+  if(!allowed(i)){render();return}
+  e.preventDefault();if(paused)resume();
+  paint=tapCell(i);render();
+  board.setPointerCapture(e.pointerId);
+});
+board.addEventListener('pointermove',e=>{
+  if(paint===null)return;const i=cellAt(e);if(i<0)return;
+  setCross(i);
+  if(allowed(i)&&st[i]!==paint){st[i]=paint;sndFor(paint)}
+  render();
+});
+function afterChange(){saveProg();if(mode==='tutorial'){tutCheck();return}if(isSolved())win()}
+function endPaint(e){
+  if(zoomed&&tapStart){
+    const t=tapStart;tapStart=null;releaseCross();
+    if(e&&Math.hypot(e.clientX-t.x,e.clientY-t.y)<10&&allowed(t.i)){if(paused)resume();tapCell(t.i);render();afterChange()}
+    return;
+  }
+  releaseCross();
+  if(paint===null)return;paint=null;afterChange();
+}
+board.addEventListener('pointerup',endPaint);board.addEventListener('pointercancel',()=>{tapStart=null;endPaint()});
+$('gZoom').onclick=()=>{zoomed=!zoomed;build();render();toast(zoomed?T('zoomOn'):T('zoomOff'))};
+
+/* ---------- плашка-помощник (подсказки и обучение) ---------- */
+function showCoach(html,btn,onBtn){
+  $('coachText').innerHTML=html;
+  const b=$('coachBtn');
+  if(btn){b.style.display='';b.textContent=btn;b.onclick=onBtn}else b.style.display='none';
+  $('coach').classList.add('show');
+}
+function hideCoach(clear){$('coach').classList.remove('show');if(clear){focusSet=new Set();targetSet=new Set();render()}}
+function setFocus(f,t){focusSet=new Set(f);targetSet=new Set(t)}
+
+/* ---------- логический шаг с объяснением ---------- */
+function rowCells(r){const a=[];for(let c=0;c<n;c++)a.push(r*n+c);return a}
+function colCells(c){const a=[];for(let r=0;r<n;r++)a.push(r*n+c);return a}
+function findStep(k){
+  const h=n/2;
+  for(const key in P.clues){
+    const ci=+key,v=P.clues[key];let s=0;const u=[];
+    for(const j of NB[ci]){if(k[j]===1)s++;else if(k[j]<0)u.push(j)}
+    if(!u.length)continue;
+    if(s===v)return{targets:u,val:0,focus:[ci],text:v===0?T('hClue0'):T('hClueFull')(v)};
+    if(s+u.length===v)return{targets:u,val:1,focus:[ci],text:s===0?T('hClueAll')(v,u.length):T('hClueRest')(v,v-s,u.length)};
+  }
+  for(const [kind,get] of [[T('row'),rowCells],[T('col'),colCells]]){
+    for(let x=0;x<n;x++){
+      const line=get(x);let s=0,w=0;const u=[];
+      for(const j of line){if(k[j]===1)s++;else if(k[j]===0)w++;else u.push(j)}
+      if(!u.length)continue;
+      if(s===h)return{targets:u,val:0,focus:line,text:T('hLineFull')(kind,h)};
+      if(w===h)return{targets:u,val:1,focus:line,text:T('hLineWhite')(kind,h)};
+    }
+  }
+  for(let r=0;r<n-1;r++)for(let c=0;c<n-1;c++){
+    const a=r*n+c,q=[a,a+1,a+n,a+n+1];let s=0;const u=[];
+    for(const j of q){if(k[j]===1)s++;else if(k[j]<0)u.push(j)}
+    if(s===3&&u.length===1)return{targets:u,val:0,focus:q,text:T('hSq')};
+  }
+  for(let i=0;i<k.length;i++){
+    if(k[i]>=0)continue;
+    for(const v of [1,0]){const g2=Int8Array.from(k);g2[i]=v;
+      if(!propagate(g2,CTX))return{targets:[i],val:1-v,focus:[],text:v===1?T('hTrialWhite'):T('hTrialFill')}}
+  }
+  return null;
+}
+function knownState(){const k=new Int8Array(n*n);for(let i=0;i<n*n;i++)k[i]=(i in P.clues)?0:st[i];return k}
+function hintStep(){
+  for(let i=0;i<n*n;i++){if(!(i in P.clues)&&st[i]!==-1&&st[i]!==P.sol[i])
+    return{fix:true,targets:[i],focus:[],text:st[i]===1?T('hFixWhite'):T('hFixFill')}}
+  const s=findStep(knownState());
+  if(s)return s;
+  const i=st.findIndex((v,j)=>v===-1&&!(j in P.clues));
+  return i<0?null:{targets:[i],val:P.sol[i],focus:[],text:T('hAny')};
+}
+
+/* ---------- инструменты ---------- */
+let toastT;function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2200)}
+$('bUndo').onclick=()=>{if(!hist.length||solved)return;st=hist.pop();hideCoach(true);render();saveProg()};
+$('bReset').onclick=()=>{if(solved)return;hist.push(st.slice());for(let i=0;i<n*n;i++)if(!(i in P.clues))st[i]=-1;hideCoach(true);render();saveProg()};
+$('bCheck').onclick=()=>{
+  if(solved)return;let wrong=0;
+  for(let i=0;i<n*n;i++){if(i in P.clues||st[i]===-1)continue;if(st[i]!==P.sol[i]){wrong++;cells[i].classList.add('wrong')}}
+  if(wrong){sndErr();vib([40,40,40]);toast(T('errors')(wrong))}else toast(T('allGood'));
+};
+function giveHint(){
+  const s=hintStep();if(!s)return;
+  hist.push(st.slice());usedHints++;
+  if(s.fix){st[s.targets[0]]=-1;sndErr()}
+  else{s.targets.forEach(i=>st[i]=s.val);sndFor(s.val)}
+  setFocus(s.focus,s.targets);render();saveProg();
+  showCoach(s.text,T('ok'),()=>hideCoach(true));
+  if(isSolved())win();
+}
+$('bHint').onclick=()=>{
+  if(solved)return;
+  if(hintsLeft>0){hintsLeft--;giveHint();return}
+  if(S.extraHints>0){S.extraHints--;saveS();giveHint();return}
+  pause();$('noHints').classList.add('show');
+};
+$('bAdHint').onclick=()=>{$('noHints').classList.remove('show');Platform.rewarded(()=>{giveHint()});resume()};
+$('bBuyHints2').onclick=()=>Platform.buy('hints',()=>{$('noHints').classList.remove('show');resume()});
+$('bNoHint').onclick=()=>{$('noHints').classList.remove('show');resume()};
+
+/* ---------- обучение ---------- */
+let tutPhase=0,tutStepCur=null,tutDotShown=false;
+
+function tutStart(){tutPhase=0;tutDotShown=false;tutStepCur=null;setFocus([],[]);render();tutIntro()}
+function tutIntro(){if(tutPhase<T('tutIntro').length)showCoach(T('tutIntro')[tutPhase],T('next'),()=>{tutPhase++;tutIntro()});else tutNext()}
+function tutNext(){
+  if(isSolved()){
+    tutStepCur=null;hideCoach(true);sndWin();vib([30,60,30]);
+    praise(T('tutDone'),T('tutDoneSub'));
+    setTimeout(()=>showCoach(T('tutEnd'),T('startPlay'),tutFinish),900);
+    return;
+  }
+  tutStepCur=findStep(knownState());
+  if(!tutStepCur){tutFinish();return}
+  let act;
+  if(tutStepCur.val===1)act=T('actFill');
+  else if(!tutDotShown){act=T('actDotFirst');tutDotShown=true}
+  else act=T('actDot');
+  setFocus(tutStepCur.focus,tutStepCur.targets);render();
+  showCoach(tutStepCur.text+'<span class="act">'+act+'</span>',null);
+}
+function tutCheck(){
+  if(!tutStepCur)return;
+  if(tutStepCur.targets.every(i=>st[i]===tutStepCur.val)){tutStepCur=null;setTimeout(tutNext,300)}
+}
+function tutFinish(){
+  S.tutorialDone=true;S.seenRules=true;saveS();hideCoach(true);document.body.classList.remove('tut');
+  const a=afterTutorial||['level'];afterTutorial=null;startGame(a[0],a[1]);
+}
+
+/* ---------- похвала ---------- */
+let praiseT;
+function praise(title,sub){
+  const p=$('praise');p.innerHTML='<b>'+title+'</b>'+(sub?'<span>'+sub+'</span>':'');
+  p.classList.remove('show');void p.offsetWidth;p.classList.add('show');
+  clearTimeout(praiseT);praiseT=setTimeout(()=>p.classList.remove('show'),2200);
+}
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+
+/* ---------- победа ---------- */
+let lastResult='';
+function win(){
+  pause();solved=true;sndWin();vib([30,60,30,60,80]);hideCoach(true);
+  const ms=curTime();store.del('balance-prog-'+pid);
+  S.solved++;
+  let rec=false;
+  if(!usedHints&&(!S.best[n]||ms<S.best[n])){S.best[n]=ms;rec=true}
+  const label=tierName(P.trials);
+  if(mode==='daily'){
+    const tk=dKey,isToday=tk===todayKey();S.dailyDone[tk]=ms;
+    if(isToday){
+      const y=new Date();y.setDate(y.getDate()-1);
+      S.streak=(S.lastDaily===todayKey(y))?S.streak+1:(S.lastDaily===tk?S.streak:1);
+      S.lastDaily=tk;S.bestStreak=Math.max(S.bestStreak||0,S.streak);
+    }else{S.dailyLate=S.dailyLate||{};S.dailyLate[tk]=true}
+    $('wTitle').textContent=isToday?T('dailySolved'):T('dateSolved')(prettyDate(tk));
+    $('wBest').textContent=S.streak;
+    $('wBestLbl').textContent=T('streakLbl')(S.streak);
+    $('bNext').textContent=T('playLevels');
+    lastResult=T('shareDaily')(prettyDate(tk),tier(label),P.n,fmt(ms),usedHints,S.streak);
+  }else{
+    S.level++;
+    $('wTitle').textContent=T('solved');
+    $('wBest').textContent=S.best[n]?fmt(S.best[n]):'—';
+    $('wBestLbl').textContent=T('best')+' '+n+'×'+n;
+    $('bNext').textContent=T('nextLevel');
+    lastResult=T('shareLevel')(S.level-1,fmt(ms));
+  }
+  saveS();
+  // похвала
+  const fast={6:60e3,8:180e3,10:360e3}[n]||180e3;
+  let title,sub;
+  const lab=tier(label);
+  if(rec&&S.solved>1){title=T('pRecord');sub=T('pRecordSub')(fmt(ms),n)}
+  else if(!usedHints&&ms<fast){title=pick(T('pFast'));sub=T('pFastSub')(lab,n,fmt(ms))}
+  else if(!usedHints){title=pick(T('pClean'));sub=T('pCleanSub')(lab)}
+  else{title=pick(T('pHinted'));sub=T('pHintedSub')}
+  if(mode==='daily'&&dKey===todayKey()&&S.streak>1)sub=T('pStreak')(S.streak);
+  praise(title,sub);
+  $('wTime').textContent=fmt(ms);
+  $('wNote').textContent=usedHints?T('noteHints')(usedHints):(rec?T('pRecord'):'');
+  setTimeout(()=>$('win').classList.add('show'),1700);
+}
+$('bNext').onclick=()=>{$('win').classList.remove('show');Platform.interstitial(()=>startGame('level'))};
+$('bMenu').onclick=()=>{$('win').classList.remove('show');refreshMenu();if(mode==='daily'){renderCal();show('daily')}else show('menu')};
+$('bShare').onclick=()=>{
+  const done=()=>toast(T('copied'));
+  try{navigator.clipboard.writeText(lastResult).then(done,()=>toast(lastResult))}catch(e){toast(lastResult)}
+};
+
+/* rules */
+function openRules(){pause();$('rules').classList.add('show')}
+$('bRulesOk').onclick=()=>{$('rules').classList.remove('show');S.seenRules=true;saveS();if($('game').classList.contains('show'))resume()};
+$('bTutorial').onclick=()=>{$('rules').classList.remove('show');afterTutorial=null;startGame('tutorial')};
+
+document.addEventListener('contextmenu',e=>e.preventDefault());
+window.addEventListener('resize',()=>{if(document.getElementById('game').classList.contains('show')){build();render()}});
+applyLang();syncSettings();syncShop();refreshMenu();
+</script>
+</body>
+</html>
