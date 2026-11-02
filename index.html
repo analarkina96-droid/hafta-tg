@@ -289,8 +289,8 @@ body.tut footer,body.tut #timer,body.tut #legend{visibility:hidden}
 const TG_CONFIG = {
   appLink: 'https://t.me/hafta_game_bot/Play',   // ссылка на мини-приложение из @BotFather
   shopUrl: '',                              // адрес мини-сервера оплаты (Cloudflare Worker), напр. 'https://hafta-pay.имя.workers.dev'
-  adsRewardBlock: '',                       // blockId рекламы за вознаграждение (Adsgram)
-  adsInterBlock: '',                        // blockId межуровневой рекламы (Adsgram)
+  adsRewardBlock: '57649',                       // blockId рекламы за вознаграждение (Adsgram)
+  adsInterBlock: 'int-57650',                        // blockId межуровневой рекламы (Adsgram)
   stars: { remove_ads: 100, hints10: 30 }   // цены в звёздах — должны совпадать с ценами в мини-сервере
 };
 /* ================================================================== */
@@ -370,8 +370,8 @@ const Platform={tg:TGA,lastAd:0,payments:null,catalog:{},ads:{},
     if(!TG_CONFIG.adsRewardBlock&&!TG_CONFIG.adsInterBlock)return;
     const s=document.createElement('script');s.src='https://sad.adsgram.ai/js/sad.min.js';
     s.onload=()=>{try{
-      if(TG_CONFIG.adsRewardBlock)this.ads.reward=window.Adsgram.init({blockId:TG_CONFIG.adsRewardBlock});
-      if(TG_CONFIG.adsInterBlock)this.ads.inter=window.Adsgram.init({blockId:TG_CONFIG.adsInterBlock});
+      if(TG_CONFIG.adsRewardBlock)this.ads.reward=window.Adsgram.init({blockId:String(TG_CONFIG.adsRewardBlock)});
+      if(TG_CONFIG.adsInterBlock){const id=String(TG_CONFIG.adsInterBlock);this.ads.inter=window.Adsgram.init({blockId:id.indexOf('int-')===0?id:'int-'+id})}  // для межуровневой рекламы Adsgram нужен префикс int-
     }catch(e){}};
     document.head.appendChild(s);
   },
