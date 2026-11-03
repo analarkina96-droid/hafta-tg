@@ -319,8 +319,8 @@ body.lives #lives{display:flex}body.tut #lives{display:none!important}
 const TG_CONFIG = {
   appLink: 'https://t.me/hafta_game_bot/Play',   // ссылка на мини-приложение из @BotFather
   shopUrl: 'https://hafta-pay.larkinaya-01.workers.dev',                              // адрес мини-сервера оплаты (Cloudflare Worker), напр. 'https://hafta-pay.имя.workers.dev'
-  adsRewardBlock: '',                       // blockId рекламы за вознаграждение (Adsgram)
-  adsInterBlock: '',                        // blockId межуровневой рекламы (Adsgram)
+  adsRewardBlock: '57649',                       // blockId рекламы за вознаграждение (Adsgram)
+  adsInterBlock: 'int-57650',                        // blockId межуровневой рекламы (Adsgram)
   stars: { remove_ads: 100, hints10: 30 }   // цены в звёздах — должны совпадать с ценами в мини-сервере
 };
 /* ================================================================== */
@@ -429,7 +429,8 @@ const Platform={tg:TGA,lastAd:0,payments:null,catalog:{},ads:{},
     const ad=this.ads.reward;
     if(!ad){onReward();return}             // реклама не настроена или недоступна — подсказка бесплатно
     adPlaying=true;
-    ad.show().then(()=>{adPlaying=false;onReward()}).catch(()=>{adPlaying=false;onReward()});
+    // награда только за досмотренную рекламу; если реклама не загрузилась (error) — не наказываем игрока
+    ad.show().then(()=>{adPlaying=false;onReward()}).catch(r=>{adPlaying=false;if(r&&r.error)onReward();else toast(T('adSkipped'))});
   }
 };
 setTimeout(()=>Platform.init(),0);
@@ -472,7 +473,7 @@ ru:{
   color:'Цвет закрашивания',colorSub:'Выбери, каким цветом закрашиваются клетки',dark:'Тёмная тема',darkSub:'Удобно играть вечером',
   timer:'Таймер',timerSub:'Показывать время решения',livesT:'Жизни',livesSub:'Жизнь снимается, когда цифра или квадрат 2×2 загораются красным',noLivesT:'Жизни закончились',noLivesP:'Посмотри короткую рекламу и получи ещё одну жизнь — или начни задачу заново.',adLife:'+1 жизнь за рекламу',restart:'Начать заново',lifeLost:k=>k?'Ошибка! Осталось '+k+' '+plRu(k,'жизнь','жизни','жизней'):'Ошибка!',lifeBack:'+1 жизнь',language:'Язык',done:'Готово',wipe:'Сбросить весь прогресс',
   wipeQ:'Сбросить прогресс?',wipeText:'Уровни, рекорды и серия дней будут удалены. Настройки сохранятся.',wipeYes:'Сбросить',cancel:'Отмена',wiped:'Прогресс сброшен',
-  noChecksT:'Проверки закончились',noChecksP:'Посмотри короткую рекламу — и я проверю поле ещё раз.',noHintsT:'Подсказки закончились',noHintsP:'Посмотри короткую рекламу и получи ещё одну подсказку.',watchAd:'Смотреть рекламу',solveMyself:'Решу сам',
+  adSkipped:'Реклама не досмотрена — награда не получена',noChecksT:'Проверки закончились',noChecksP:'Посмотри короткую рекламу — и я проверю поле ещё раз.',noHintsT:'Подсказки закончились',noHintsP:'Посмотри короткую рекламу и получи ещё одну подсказку.',watchAd:'Смотреть рекламу',solveMyself:'Решу сам',
   colors:['Основной','Синий','Жёлтый','Оранжевый'],tiers:['Лёгкая','Средняя','Сложная','Эксперт'],
   dailyDoneToday:'Задача дня уже решена — приходи завтра!',alreadySolved:'Эта задача уже решена',
   zoomOn:'Приближение: двигай поле пальцем, касание ставит отметку',zoomOff:'Обычный вид',
@@ -541,7 +542,7 @@ en:{
   color:'Fill colour',colorSub:'Choose the colour of filled cells',dark:'Dark theme',darkSub:'Easier on the eyes at night',
   timer:'Timer',timerSub:'Show solving time',livesT:'Lives',livesSub:'You lose a life when a number or a 2×2 block turns red',noLivesT:'Out of lives',noLivesP:'Watch a short ad to get one more life — or start the puzzle over.',adLife:'+1 life for an ad',restart:'Start over',lifeLost:k=>k?'Mistake! '+k+' '+plEn(k,'life','lives')+' left':'Mistake!',lifeBack:'+1 life',language:'Language',done:'Done',wipe:'Reset all progress',
   wipeQ:'Reset progress?',wipeText:'Levels, records and your streak will be deleted. Settings are kept.',wipeYes:'Reset',cancel:'Cancel',wiped:'Progress reset',
-  noChecksT:'Out of checks',noChecksP:'Watch a short ad and I’ll check the board once more.',noHintsT:'Out of hints',noHintsP:'Watch a short ad to get one more hint.',watchAd:'Watch ad',solveMyself:'I’ll solve it myself',
+  adSkipped:'Ad was skipped — no reward',noChecksT:'Out of checks',noChecksP:'Watch a short ad and I’ll check the board once more.',noHintsT:'Out of hints',noHintsP:'Watch a short ad to get one more hint.',watchAd:'Watch ad',solveMyself:'I’ll solve it myself',
   colors:['Classic','Blue','Yellow','Orange'],tiers:['Easy','Medium','Hard','Expert'],
   dailyDoneToday:'Today’s puzzle is solved — come back tomorrow!',alreadySolved:'This puzzle is already solved',
   zoomOn:'Zoom: drag to move the board, tap to mark a cell',zoomOff:'Normal view',
